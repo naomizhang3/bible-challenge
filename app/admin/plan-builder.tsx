@@ -11,8 +11,15 @@ import {
   type Segment,
 } from "../../src/lib/bible";
 
+const ORDER = new Map(BIBLE_BOOKS.map((b, i) => [b.name, i]));
+const OT = BIBLE_BOOKS.filter((b) => b.testament === "OT");
+const NT = BIBLE_BOOKS.filter((b) => b.testament === "NT");
+
 function wholeBook(name: string): Segment {
   return { book: name, from: 1, to: BOOK_BY_NAME.get(name)?.chapters ?? 1 };
+}
+function byOrder(a: Segment, b: Segment) {
+  return (ORDER.get(a.book) ?? 0) - (ORDER.get(b.book) ?? 0);
 }
 
 export default function PlanBuilder({
@@ -32,6 +39,10 @@ export default function PlanBuilder({
   const [perDay, setPerDay] = useState(1);
   const [startDate, setStartDate] = useState(defaultStartDate ?? "");
 
+  const selected = useMemo(
+    () => new Set(segments.map((s) => s.book)),
+    [segments]
+  );
   const plan = useMemo(
     () =>
       segments.length && startDate
@@ -42,24 +53,24 @@ export default function PlanBuilder({
   const totalChapters = totalChaptersInSegments(segments);
 
   function applyPreset(books: string[]) {
-    setSegments(books.map(wholeBook));
+    setSegments(books.map(wholeBook).sort(byOrder));
   }
-  function addBook(name: string) {
-    if (!name || segments.some((s) => s.book === name)) return;
-    setSegments((prev) => [...prev, wholeBook(name)]);
-  }
-  function updateSegment(i: number, patch: Partial<Segment>) {
+  function toggleBook(name: string) {
     setSegments((prev) =>
-      prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s))
+      prev.some((s) => s.book === name)
+        ? prev.filter((s) => s.book !== name)
+        : [...prev, wholeBook(name)].sort(byOrder)
     );
   }
-  function removeSegment(i: number) {
-    setSegments((prev) => prev.filter((_, idx) => idx !== i));
+  function updateSegment(book: string, patch: Partial<Segment>) {
+    setSegments((prev) =>
+      prev.map((s) => (s.book === book ? { ...s, ...patch } : s))
+    );
   }
 
   return (
     <div className="space-y-4">
-      {/* Presets — quick "whole book(s)" */}
+      {/* Presets */}
       <div className="flex flex-wrap gap-2">
         {BOOK_PRESETS.map((p) => (
           <button
@@ -80,71 +91,92 @@ export default function PlanBuilder({
         </button>
       </div>
 
-      {/* Add a single book */}
-      <select
-        value=""
-        onChange={(e) => addBook(e.target.value)}
-        className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content"
-      >
-        <option value="">+ Add a book…</option>
-        {BIBLE_BOOKS.map((b) => (
-          <option key={b.name} value={b.name}>
-            {b.name} ({b.chapters})
-          </option>
-        ))}
-      </select>
-
-      {/* Chosen segments with chapter ranges */}
-      {segments.length > 0 && (
-        <ul className="space-y-2">
-          {segments.map((s, i) => {
-            const max = BOOK_BY_NAME.get(s.book)?.chapters ?? 1;
-            return (
-              <li
-                key={s.book}
-                className="flex items-center gap-2 rounded-lg border border-hair px-3 py-2 text-sm"
-              >
-                <span className="flex-1 truncate font-medium text-heading">
-                  {s.book}
-                </span>
-                <span className="text-xs text-muted">Ch</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={max}
-                  value={s.from}
-                  onChange={(e) =>
-                    updateSegment(i, {
-                      from: clamp(Number(e.target.value), 1, max),
-                    })
-                  }
-                  className="w-14 rounded-md border border-hair bg-background px-2 py-1 text-content"
-                />
-                <span className="text-xs text-muted">–</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={max}
-                  value={s.to}
-                  onChange={(e) =>
-                    updateSegment(i, {
-                      to: clamp(Number(e.target.value), 1, max),
-                    })
-                  }
-                  className="w-14 rounded-md border border-hair bg-background px-2 py-1 text-content"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSegment(i)}
-                  className="pl-1 text-muted hover:text-red-600"
-                  aria-label={`Remove ${s.book}`}
+      {/* Multi-select book checklist */}
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { title: "Old Testament", books: OT },
+          { title: "New Testament", books: NT },
+        ].map((col) => (
+          <div key={col.title}>
+            <div className="mb-1 text-xs font-medium text-muted">
+              {col.title}
+            </div>
+            <div className="max-h-48 overflow-y-auto pr-1">
+              {col.books.map((b) => (
+                <label
+                  key={b.name}
+                  className="flex items-center gap-2 py-0.5 text-sm"
                 >
-                  ✕
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(b.name)}
+                    onChange={() => toggleBook(b.name)}
+                  />
+                  <span className="flex-1 text-content">{b.name}</span>
+                  <span className="text-xs text-muted">{b.chapters}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Chapter ranges for the selected books */}
+      {segments.length > 0 && (
+        <div>
+          <div className="mb-1 text-xs font-medium text-muted">
+            Chapters to read
+          </div>
+          <ul className="space-y-2">
+            {segments.map((s) => {
+              const max = BOOK_BY_NAME.get(s.book)?.chapters ?? 1;
+              return (
+                <li
+                  key={s.book}
+                  className="flex items-center gap-2 rounded-lg border border-hair px-3 py-2 text-sm"
+                >
+                  <span className="flex-1 truncate font-medium text-heading">
+                    {s.book}
+                  </span>
+                  <span className="text-xs text-muted">Ch</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={max}
+                    value={s.from}
+                    onChange={(e) =>
+                      updateSegment(s.book, {
+                        from: clamp(Number(e.target.value), 1, max),
+                      })
+                    }
+                    className="w-14 rounded-md border border-hair bg-background px-2 py-1 text-content"
+                  />
+                  <span className="text-xs text-muted">–</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={max}
+                    value={s.to}
+                    onChange={(e) =>
+                      updateSegment(s.book, {
+                        to: clamp(Number(e.target.value), 1, max),
+                      })
+                    }
+                    className="w-14 rounded-md border border-hair bg-background px-2 py-1 text-content"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleBook(s.book)}
+                    className="pl-1 text-muted hover:text-red-600"
+                    aria-label={`Remove ${s.book}`}
+                  >
+                    ✕
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       {/* Pace + start */}
@@ -170,7 +202,7 @@ export default function PlanBuilder({
         </label>
       </div>
 
-      {/* Summary — no day-by-day list */}
+      {/* Summary */}
       {plan.length > 0 ? (
         <div className="rounded-lg bg-surface-muted px-3 py-2 text-sm text-content">
           <span className="font-semibold text-heading">{totalChapters}</span>{" "}
@@ -182,7 +214,7 @@ export default function PlanBuilder({
         </div>
       ) : (
         <p className="text-xs text-muted">
-          Add at least one book and a start date to preview the plan.
+          Pick at least one book and a start date to preview the plan.
         </p>
       )}
 
