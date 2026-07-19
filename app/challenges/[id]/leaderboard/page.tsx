@@ -1,8 +1,5 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createClient } from "../../../../src/lib/supabase/server";
 import { todayInTz, weekBoundsFromISO } from "../../../../src/lib/dates";
-import AppHeader from "../../../app-header";
 import LeaderboardTabs, { type Row, type TeamRow } from "./leaderboard-tabs";
 
 // Competition ranking (1,2,2,4) over a points-sorted list.
@@ -30,18 +27,11 @@ export default async function LeaderboardPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, is_admin, timezone")
+    .select("timezone")
     .eq("id", user!.id)
     .single();
   const tz = profile?.timezone ?? "UTC";
   const { start: weekStart } = weekBoundsFromISO(todayInTz(tz));
-
-  const { data: challenge } = await supabase
-    .from("challenges")
-    .select("id, name")
-    .eq("id", id)
-    .single();
-  if (!challenge) notFound();
 
   const { data: ind } = await supabase
     .from("individual_leaderboard")
@@ -65,7 +55,6 @@ export default async function LeaderboardPage({
     (wk ?? []).map((w) => [w.user_id, w.weekly_points ?? 0])
   );
 
-  // Individuals — all time (already ranked) and this week (recomputed).
   const individualsAll: Row[] = (ind ?? []).map((r) => ({
     userId: r.user_id ?? "",
     name: r.display_name ?? "—",
@@ -82,7 +71,6 @@ export default async function LeaderboardPage({
     }))
   );
 
-  // Teams — all time (from view) and this week (avg of members' week points).
   const teamsAll: TeamRow[] = (teamRows ?? []).map((t) => ({
     teamId: t.team_id ?? "",
     name: t.team_name ?? "—",
@@ -107,34 +95,12 @@ export default async function LeaderboardPage({
   ).map((t) => ({ ...t, avg: t.points }));
 
   return (
-    <div className="flex flex-1 flex-col">
-      <AppHeader
-        displayName={profile?.display_name}
-        avatarUrl={profile?.avatar_url}
-        isAdmin={profile?.is_admin}
-      />
-      <main className="mx-auto w-full max-w-xl flex-1 space-y-5 p-5">
-        <div>
-          <Link
-            href={`/challenges/${id}`}
-            className="text-sm text-muted hover:text-heading"
-          >
-            ← {challenge.name}
-          </Link>
-          <h1 className="mt-2 font-serif text-3xl font-bold text-heading">
-            Leaderboard
-          </h1>
-          <p className="text-sm text-muted">See how everyone is doing</p>
-        </div>
-
-        <LeaderboardTabs
-          meId={user!.id}
-          individualsAll={individualsAll}
-          individualsWeek={individualsWeek}
-          teamsAll={teamsAll}
-          teamsWeek={teamsWeek}
-        />
-      </main>
-    </div>
+    <LeaderboardTabs
+      meId={user!.id}
+      individualsAll={individualsAll}
+      individualsWeek={individualsWeek}
+      teamsAll={teamsAll}
+      teamsWeek={teamsWeek}
+    />
   );
 }

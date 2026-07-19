@@ -1,8 +1,5 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createClient } from "../../../../src/lib/supabase/server";
 import { todayInTz } from "../../../../src/lib/dates";
-import AppHeader from "../../../app-header";
 
 function parseISO(s: string) {
   const [y, m, d] = s.split("-").map(Number);
@@ -42,24 +39,9 @@ export default async function CalendarPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, is_admin, timezone")
+    .select("timezone")
     .eq("id", user!.id)
     .single();
-
-  const { data: challenge } = await supabase
-    .from("challenges")
-    .select("id, name")
-    .eq("id", id)
-    .single();
-  if (!challenge) notFound();
-
-  const header = (
-    <AppHeader
-      displayName={profile?.display_name}
-      avatarUrl={profile?.avatar_url}
-      isAdmin={profile?.is_admin}
-    />
-  );
 
   const { data: participant } = await supabase
     .from("challenge_participants")
@@ -70,15 +52,7 @@ export default async function CalendarPage({
 
   if (!participant) {
     return (
-      <div className="flex flex-1 flex-col">
-        {header}
-        <main className="mx-auto w-full max-w-xl flex-1 space-y-4 p-5">
-          <Back id={id} name={challenge.name} />
-          <p className="text-muted">
-            Join this challenge to see your calendar.
-          </p>
-        </main>
-      </div>
+      <p className="text-muted">Join this challenge to see your calendar.</p>
     );
   }
 
@@ -103,15 +77,7 @@ export default async function CalendarPage({
   const readingByDate = new Map((readings ?? []).map((r) => [r.date, r]));
 
   if (!readings || readings.length === 0) {
-    return (
-      <div className="flex flex-1 flex-col">
-        {header}
-        <main className="mx-auto w-full max-w-xl flex-1 space-y-4 p-5">
-          <Back id={id} name={challenge.name} />
-          <p className="text-muted">No readings scheduled yet.</p>
-        </main>
-      </div>
-    );
+    return <p className="text-muted">No readings scheduled yet.</p>;
   }
 
   const first = parseISO(readings[0].date);
@@ -133,7 +99,6 @@ export default async function CalendarPage({
     }
   }
 
-  // Reading history (most recent first).
   const history = (progress ?? [])
     .map((p) => {
       const r = readingById.get(p.reading_id);
@@ -152,129 +117,109 @@ export default async function CalendarPage({
     .slice(0, 20);
 
   return (
-    <div className="flex flex-1 flex-col">
-      {header}
-      <main className="mx-auto w-full max-w-xl flex-1 space-y-5 p-5">
-        <div>
-          <Back id={id} name={challenge.name} />
-          <h1 className="mt-2 font-serif text-3xl font-bold text-heading">
-            Calendar
-          </h1>
-          <p className="text-sm text-muted">
-            {done}/{readings.length} readings · {withSomeone} with someone
-          </p>
-        </div>
+    <>
+      <p className="text-sm text-muted">
+        {done}/{readings.length} readings · {withSomeone} with someone
+      </p>
 
-        <div className="rounded-2xl border border-hair bg-surface p-4 shadow-sm">
-          <div className="grid grid-cols-7 gap-1 text-center text-xs">
-            {DOW.map((d) => (
-              <div key={d} className="pb-1 font-medium text-muted">
-                {d}
-              </div>
-            ))}
-            {cells.map((d) => {
-              const key = iso(d);
-              const reading = readingByDate.get(key);
-              const isToday = key === today;
-              const past = key < today;
+      <div className="rounded-2xl border border-hair bg-surface p-4 shadow-sm">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs">
+          {DOW.map((d) => (
+            <div key={d} className="pb-1 font-medium text-muted">
+              {d}
+            </div>
+          ))}
+          {cells.map((d) => {
+            const key = iso(d);
+            const reading = readingByDate.get(key);
+            const isToday = key === today;
+            const past = key < today;
 
-              let cls =
-                "aspect-square rounded-lg flex flex-col items-center justify-center text-[11px] ";
-              let mark = "";
-              const p = reading ? doneByReading.get(reading.id) : undefined;
-              if (!reading) {
-                cls += "text-slate-300";
-              } else if (p) {
-                if (p.backfill) {
-                  cls += "bg-amber-500/15 text-amber-700 dark:text-amber-400";
-                  mark = "↺";
-                } else {
-                  cls += p.ws
-                    ? "bg-emerald-500/25 text-emerald-800 dark:text-emerald-300"
-                    : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400";
-                  mark = p.ws ? "★" : "✓";
-                }
-              } else if (past) {
-                cls += "text-muted";
-                mark = "·";
+            let cls =
+              "aspect-square rounded-lg flex flex-col items-center justify-center text-[11px] ";
+            let mark = "";
+            const p = reading ? doneByReading.get(reading.id) : undefined;
+            if (!reading) {
+              cls += "text-slate-300";
+            } else if (p) {
+              if (p.backfill) {
+                cls += "bg-amber-500/15 text-amber-700 dark:text-amber-400";
+                mark = "↺";
               } else {
-                cls += "bg-surface-muted text-muted";
+                cls += p.ws
+                  ? "bg-emerald-500/25 text-emerald-800 dark:text-emerald-300"
+                  : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400";
+                mark = p.ws ? "★" : "✓";
               }
-              if (isToday) cls += " ring-2 ring-brand";
+            } else if (past) {
+              cls += "text-muted";
+              mark = "·";
+            } else {
+              cls += "bg-surface-muted text-muted";
+            }
+            if (isToday) cls += " ring-2 ring-brand";
 
-              return (
-                <div
-                  key={key}
-                  className={cls}
-                  title={reading ? `${key} — ${reading.display_text}` : key}
-                >
-                  <span>{d.getDate()}</span>
-                  {mark && <span className="leading-none">{mark}</span>}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-            <Legend swatch="bg-emerald-500/30" label="★ with someone" />
-            <Legend swatch="bg-emerald-500/20" label="✓ completed" />
-            <Legend swatch="bg-amber-500/25" label="↺ backfilled" />
-          </div>
+            return (
+              <div
+                key={key}
+                className={cls}
+                title={reading ? `${key} — ${reading.display_text}` : key}
+              >
+                <span>{d.getDate()}</span>
+                {mark && <span className="leading-none">{mark}</span>}
+              </div>
+            );
+          })}
         </div>
 
-        {history.length > 0 && (
-          <div className="overflow-hidden rounded-2xl border border-hair bg-surface shadow-sm">
-            <h2 className="border-b border-hair px-4 py-3 font-serif text-lg font-semibold text-heading">
-              Reading History
-            </h2>
-            <ul>
-              {history.map((h, i) => (
-                <li
-                  key={`${h.date}-${i}`}
-                  className={
-                    "flex items-center justify-between px-4 py-3 " +
-                    (i > 0 ? "border-t border-hair" : "")
-                  }
-                >
-                  <div className="min-w-0 pr-3">
-                    <div className="truncate font-medium text-heading">
-                      {h.text}
-                    </div>
-                    <div className="text-xs text-muted">
-                      {shortDate(h.date)} ·{" "}
-                      {h.backfill
-                        ? "Backfilled"
-                        : h.ws
-                          ? "With someone"
-                          : "Alone"}
-                    </div>
-                    {h.reflection && (
-                      <p className="mt-1 font-serif text-sm italic text-content">
-                        &ldquo;{h.reflection}&rdquo;
-                      </p>
-                    )}
-                  </div>
-                  <span className="shrink-0 font-semibold text-heading">
-                    +{!h.backfill && h.ws ? 2 : 1}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+          <Legend swatch="bg-emerald-500/30" label="★ with someone" />
+          <Legend swatch="bg-emerald-500/20" label="✓ completed" />
+          <Legend swatch="bg-amber-500/25" label="↺ backfilled" />
+        </div>
+      </div>
 
-function Back({ id, name }: { id: string; name: string }) {
-  return (
-    <Link
-      href={`/challenges/${id}`}
-      className="text-sm text-muted hover:text-heading"
-    >
-      ← {name}
-    </Link>
+      {history.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-hair bg-surface shadow-sm">
+          <h2 className="border-b border-hair px-4 py-3 font-serif text-lg font-semibold text-heading">
+            Reading History
+          </h2>
+          <ul>
+            {history.map((h, i) => (
+              <li
+                key={`${h.date}-${i}`}
+                className={
+                  "flex items-center justify-between px-4 py-3 " +
+                  (i > 0 ? "border-t border-hair" : "")
+                }
+              >
+                <div className="min-w-0 pr-3">
+                  <div className="truncate font-medium text-heading">
+                    {h.text}
+                  </div>
+                  <div className="text-xs text-muted">
+                    {shortDate(h.date)} ·{" "}
+                    {h.backfill
+                      ? "Backfilled"
+                      : h.ws
+                        ? "With someone"
+                        : "Alone"}
+                  </div>
+                  {h.reflection && (
+                    <p className="mt-1 font-serif text-sm italic text-content">
+                      &ldquo;{h.reflection}&rdquo;
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 font-semibold text-heading">
+                  +{!h.backfill && h.ws ? 2 : 1}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
   );
 }
 
