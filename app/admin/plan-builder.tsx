@@ -27,12 +27,14 @@ export default function PlanBuilder({
   submitLabel,
   busy,
   error,
+  disabled,
   onSubmit,
 }: {
   defaultStartDate?: string;
   submitLabel: string;
   busy: boolean;
   error: string | null;
+  disabled?: boolean;
   onSubmit: (plan: PlanReading[], startDate: string) => void;
 }) {
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -226,7 +228,7 @@ export default function PlanBuilder({
       <button
         type="button"
         onClick={() => onSubmit(plan, startDate)}
-        disabled={busy || plan.length === 0}
+        disabled={busy || disabled || plan.length === 0}
         className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {busy ? "Saving…" : submitLabel}

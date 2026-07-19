@@ -20,6 +20,7 @@ export default function CreateChallenge() {
 
   async function create(plan: PlanReading[], startDate: string) {
     if (!name.trim()) return setError("Give the challenge a name.");
+    if (!plan.length) return setError("Add at least one book to the plan.");
     setBusy(true);
     setError(null);
 
@@ -119,8 +120,12 @@ export default function CreateChallenge() {
           submitLabel="Create challenge"
           busy={busy}
           error={error}
+          disabled={!name.trim()}
           onSubmit={create}
         />
+        {!name.trim() && (
+          <p className="text-xs text-muted">Add a name above to create.</p>
+        )}
       </div>
 
       <button
