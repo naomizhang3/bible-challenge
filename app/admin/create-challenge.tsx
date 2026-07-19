@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../src/lib/supabase/client";
 import { CHALLENGE_STATUSES } from "../../src/lib/challenge-status";
+import type { PlanReading } from "../../src/lib/bible";
+import PlanBuilder from "./plan-builder";
 
 export default function CreateChallenge() {
   const router = useRouter();
@@ -11,14 +13,13 @@ export default function CreateChallenge() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
   const [status, setStatus] =
-    useState<(typeof CHALLENGE_STATUSES)[number]>("draft");
+    useState<(typeof CHALLENGE_STATUSES)[number]>("active");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function create(plan: PlanReading[], startDate: string) {
+    if (!name.trim()) return setError("Give the challenge a name.");
     setBusy(true);
     setError(null);
 
@@ -30,30 +31,44 @@ export default function CreateChallenge() {
       return setError("Not signed in.");
     }
 
-    const { data, error } = await supabase
+    // Challenge dates come straight from the plan.
+    const { data: challenge, error: cErr } = await supabase
       .from("challenges")
       .insert({
         name: name.trim(),
         description: description.trim() || null,
         status,
         start_date: startDate,
-        // Provisional until a reading plan is generated, which sets the real end.
-        end_date: startDate,
+        end_date: plan[plan.length - 1].date,
         created_by: user.id,
       })
       .select("id")
       .single();
 
-    setBusy(false);
-    if (error) return setError(error.message);
-    router.push(`/admin/challenges/${data.id}`);
+    if (cErr) {
+      setBusy(false);
+      return setError(cErr.message);
+    }
+
+    const rows = plan.map((p) => ({ challenge_id: challenge.id, ...p }));
+    for (let i = 0; i < rows.length; i += 500) {
+      const { error: rErr } = await supabase
+        .from("readings")
+        .insert(rows.slice(i, i + 500));
+      if (rErr) {
+        setBusy(false);
+        return setError(rErr.message);
+      }
+    }
+
+    router.push(`/admin/challenges/${challenge.id}`);
   }
 
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="self-start rounded-md bg-brand px-4 py-2 text-sm font-medium text-white"
+        className="self-start rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white"
       >
         + New challenge
       </button>
@@ -61,71 +76,60 @@ export default function CreateChallenge() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-hair p-5 dark:border-white/15"
-    >
+    <div className="space-y-4 rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+      <h2 className="font-serif text-lg font-semibold text-heading">
+        New challenge
+      </h2>
+
       <input
         required
         placeholder="Challenge name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+        className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content placeholder:text-muted"
       />
       <textarea
         placeholder="Description (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+        className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content placeholder:text-muted"
       />
-      <div className="flex gap-3">
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
-          Start
-          <input
-            required
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
-          />
-        </label>
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
-          Status
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value as (typeof CHALLENGE_STATUSES)[number])
-            }
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
-          >
-            {CHALLENGE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <p className="text-xs text-muted">
-        The end date is set automatically when you generate a reading plan.
-      </p>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      <label className="block text-xs text-muted">
+        Status
+        <select
+          value={status}
+          onChange={(e) =>
+            setStatus(e.target.value as (typeof CHALLENGE_STATUSES)[number])
+          }
+          className="mt-1 block w-40 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content"
         >
-          {busy ? "Creating…" : "Create"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="rounded-md border border-hair px-4 py-2 text-sm dark:border-white/20"
-        >
-          Cancel
-        </button>
+          {CHALLENGE_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="border-t border-hair pt-4">
+        <h3 className="mb-3 text-sm font-semibold text-heading">
+          Reading plan
+        </h3>
+        <PlanBuilder
+          submitLabel="Create challenge"
+          busy={busy}
+          error={error}
+          onSubmit={create}
+        />
       </div>
-    </form>
+
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="text-sm text-muted hover:text-heading"
+      >
+        Cancel
+      </button>
+    </div>
   );
 }

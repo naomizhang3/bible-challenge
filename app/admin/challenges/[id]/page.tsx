@@ -4,8 +4,7 @@ import { getViewer } from "../../../../src/lib/admin";
 import AppHeader from "../../../app-header";
 import DeleteChallengeButton from "./delete-challenge-button";
 import EditChallenge from "./edit-challenge";
-import PlanGenerator from "./plan-generator";
-import ReadingsManager from "./readings-manager";
+import PlanEditor from "./plan-editor";
 import TeamsManager from "./teams-manager";
 import MembersManager from "./members-manager";
 
@@ -92,14 +91,23 @@ export default async function AdminChallengePage({
         <EditChallenge challenge={challenge} />
       </Section>
 
-      <Section title="Readings">
-        <PlanGenerator
-          challengeId={id}
-          defaultStartDate={challenge.start_date}
-          hasReadings={(readings ?? []).length > 0}
-        />
-        <ReadingsManager challengeId={id} readings={readings ?? []} />
-      </Section>
+        <Section title="Reading plan">
+          <PlanEditor
+            challengeId={id}
+            defaultStartDate={challenge.start_date}
+            summary={
+              (readings ?? []).length > 0
+                ? {
+                    count: readings!.length,
+                    first: readings![0].display_text,
+                    last: readings![readings!.length - 1].display_text,
+                    firstDate: readings![0].date,
+                    lastDate: readings![readings!.length - 1].date,
+                  }
+                : null
+            }
+          />
+        </Section>
 
       <Section title="Teams">
         <TeamsManager challengeId={id} teams={teamsWithCounts} />

@@ -103,15 +103,20 @@ function isoLocal(d: Date) {
   ).padStart(2, "0")}`;
 }
 
+// A single chapter of Psalms reads "Psalm 3", not "Psalms 3".
+function label(book: string): string {
+  return book === "Psalms" ? "Psalm" : book;
+}
+
 function formatRange(group: { book: string; chapter: number }[]): string {
   const first = group[0];
   const last = group[group.length - 1];
   if (first.book === last.book) {
     return first.chapter === last.chapter
-      ? `${first.book} ${first.chapter}`
-      : `${first.book} ${first.chapter}-${last.chapter}`;
+      ? `${label(first.book)} ${first.chapter}`
+      : `${label(first.book)} ${first.chapter}-${last.chapter}`;
   }
-  return `${first.book} ${first.chapter} – ${last.book} ${last.chapter}`;
+  return `${label(first.book)} ${first.chapter} – ${label(last.book)} ${last.chapter}`;
 }
 
 // Total chapters selected (for previews) without building the whole plan.
@@ -133,6 +138,47 @@ export function generatePlan(
   const seq: { book: string; chapter: number }[] = [];
   for (const b of chosen)
     for (let c = 1; c <= b.chapters; c++) seq.push({ book: b.name, chapter: c });
+
+  const per = Math.max(1, Math.floor(chaptersPerDay));
+  const [y, m, d] = startDateISO.split("-").map(Number);
+  const readings: PlanReading[] = [];
+
+  let day = 1;
+  for (let i = 0; i < seq.length; i += per) {
+    const group = seq.slice(i, i + per);
+    readings.push({
+      day_number: day,
+      date: isoLocal(new Date(y, m - 1, d + (day - 1))),
+      display_text: formatRange(group),
+    });
+    day++;
+  }
+  return readings;
+}
+
+// A chosen portion of a book (chapters `from`..`to`, inclusive).
+export type Segment = { book: string; from: number; to: number };
+
+export function totalChaptersInSegments(segments: Segment[]): number {
+  return segments.reduce(
+    (sum, s) => sum + Math.max(0, s.to - s.from + 1),
+    0
+  );
+}
+
+// Build a dated plan from explicit book+chapter-range segments (in order),
+// grouped `chaptersPerDay` per day from `startDate`.
+export function generatePlanFromSegments(
+  segments: Segment[],
+  chaptersPerDay: number,
+  startDateISO: string
+): PlanReading[] {
+  const seq: { book: string; chapter: number }[] = [];
+  for (const s of segments) {
+    const lo = Math.min(s.from, s.to);
+    const hi = Math.max(s.from, s.to);
+    for (let c = lo; c <= hi; c++) seq.push({ book: s.book, chapter: c });
+  }
 
   const per = Math.max(1, Math.floor(chaptersPerDay));
   const [y, m, d] = startDateISO.split("-").map(Number);
