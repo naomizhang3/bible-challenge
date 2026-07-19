@@ -46,7 +46,7 @@ export default function MarkComplete({
 
   if (progress) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-emerald-600/40 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+      <div className="flex items-center gap-2 rounded-xl border border-emerald-600/40 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-400">
         <Check />
         Completed
         {progress.read_with_someone

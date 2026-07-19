@@ -68,7 +68,7 @@ export default function LeaderboardTabs({
                 className={
                   "flex items-center gap-3 px-4 py-3 " +
                   (i > 0 ? "border-t border-hair " : "") +
-                  (r.userId === meId ? "bg-amber-50" : "")
+                  (r.userId === meId ? "bg-amber-500/10" : "")
                 }
               >
                 <RankBadge rank={r.rank} />
@@ -80,7 +80,7 @@ export default function LeaderboardTabs({
                     </span>
                   )}
                 </span>
-                <span className="flex items-center gap-1 text-sm text-amber-600">
+                <span className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400">
                   <Flame />
                   {r.streak}
                 </span>
@@ -153,7 +153,7 @@ function Segmented({
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) {
     return (
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
         <Trophy />
       </span>
     );

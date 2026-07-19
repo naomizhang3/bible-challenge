@@ -186,12 +186,12 @@ export default async function CalendarPage({
                 cls += "text-slate-300";
               } else if (p) {
                 if (p.backfill) {
-                  cls += "bg-amber-100 text-amber-700";
+                  cls += "bg-amber-500/15 text-amber-700 dark:text-amber-400";
                   mark = "↺";
                 } else {
                   cls += p.ws
-                    ? "bg-emerald-200 text-emerald-800"
-                    : "bg-emerald-100 text-emerald-700";
+                    ? "bg-emerald-500/25 text-emerald-800 dark:text-emerald-300"
+                    : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400";
                   mark = p.ws ? "★" : "✓";
                 }
               } else if (past) {
@@ -216,9 +216,9 @@ export default async function CalendarPage({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-            <Legend swatch="bg-emerald-200" label="★ with someone" />
-            <Legend swatch="bg-emerald-100" label="✓ completed" />
-            <Legend swatch="bg-amber-100" label="↺ backfilled" />
+            <Legend swatch="bg-emerald-500/30" label="★ with someone" />
+            <Legend swatch="bg-emerald-500/20" label="✓ completed" />
+            <Legend swatch="bg-amber-500/25" label="↺ backfilled" />
           </div>
         </div>
 
