@@ -11,7 +11,7 @@ export default async function ChallengesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, is_admin")
+    .select("display_name, is_admin")
     .eq("id", user!.id)
     .single();
 
@@ -31,7 +31,6 @@ export default async function ChallengesPage() {
     <div className="flex flex-1 flex-col">
       <AppHeader
         displayName={profile?.display_name}
-        avatarUrl={profile?.avatar_url}
         isAdmin={profile?.is_admin}
       />
       <main className="mx-auto w-full max-w-xl flex-1 space-y-5 p-5">

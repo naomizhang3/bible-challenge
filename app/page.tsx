@@ -33,7 +33,7 @@ export default async function Home() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, timezone, is_admin")
+    .select("display_name, timezone, is_admin")
     .eq("id", user!.id)
     .single();
 
@@ -70,7 +70,6 @@ export default async function Home() {
     <div className="flex flex-1 flex-col">
       <AppHeader
         displayName={profile?.display_name}
-        avatarUrl={profile?.avatar_url}
         isAdmin={profile?.is_admin}
       />
 

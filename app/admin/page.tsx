@@ -8,7 +8,7 @@ export default async function AdminPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name")
     .eq("id", user!.id)
     .single();
 
@@ -27,7 +27,6 @@ export default async function AdminPage() {
     <div className="flex flex-1 flex-col">
       <AppHeader
         displayName={profile?.display_name}
-        avatarUrl={profile?.avatar_url}
         isAdmin={isAdmin}
       />
       <main className="mx-auto w-full max-w-xl flex-1 space-y-5 p-5">

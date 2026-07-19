@@ -5,11 +5,9 @@ import ThemeToggle from "./theme-toggle";
 // link, a profile avatar chip, and sign-out on the right.
 export default function AppHeader({
   displayName,
-  avatarUrl,
   isAdmin,
 }: {
   displayName?: string | null;
-  avatarUrl?: string | null;
   isAdmin?: boolean;
 }) {
   const initial = (displayName ?? "").trim().charAt(0).toUpperCase() || "?";
@@ -35,14 +33,9 @@ export default function AppHeader({
         <Link
           href="/profile"
           title="Profile"
-          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand text-sm font-semibold text-white"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white"
         >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            initial
-          )}
+          {initial}
         </Link>
         <form action="/auth/signout" method="post" className="flex">
           <button type="submit" title="Sign out" className="hover:text-heading">
