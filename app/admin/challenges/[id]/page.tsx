@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getViewer } from "../../../../src/lib/admin";
 import AppHeader from "../../../app-header";
+import DeleteChallengeButton from "./delete-challenge-button";
 import EditChallenge from "./edit-challenge";
 import PlanGenerator from "./plan-generator";
 import ReadingsManager from "./readings-manager";
@@ -107,6 +108,20 @@ export default async function AdminChallengePage({
         <Section title="Members">
           <MembersManager members={members} teams={teams ?? []} />
         </Section>
+
+        <section className="rounded-2xl border border-red-300/60 bg-surface p-5 shadow-sm">
+          <h2 className="mb-1 font-serif text-lg font-semibold text-red-600">
+            Danger zone
+          </h2>
+          <p className="mb-3 text-sm text-muted">
+            Permanently delete this challenge and all of its readings, teams,
+            members, and progress.
+          </p>
+          <DeleteChallengeButton
+            challengeId={id}
+            challengeName={challenge.name}
+          />
+        </section>
       </main>
     </div>
   );

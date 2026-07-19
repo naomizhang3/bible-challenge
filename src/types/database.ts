@@ -437,6 +437,7 @@ export type Database = {
     }
     Functions: {
       can_admin_challenge: { Args: { cid: string }; Returns: boolean }
+      delete_challenge: { Args: { cid: string }; Returns: undefined }
       is_global_admin: { Args: never; Returns: boolean }
     }
     Enums: {
