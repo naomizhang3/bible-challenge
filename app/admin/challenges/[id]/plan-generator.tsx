@@ -93,6 +93,19 @@ export default function PlanGenerator({
       }
     }
 
+    // Sync the challenge window to the generated plan.
+    const { error: updErr } = await supabase
+      .from("challenges")
+      .update({
+        start_date: plan[0].date,
+        end_date: plan[plan.length - 1].date,
+      })
+      .eq("id", challengeId);
+    if (updErr) {
+      setBusy(false);
+      return setError(updErr.message);
+    }
+
     setBusy(false);
     setDone(rows.length);
     setSelected(new Set());

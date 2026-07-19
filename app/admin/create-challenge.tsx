@@ -12,7 +12,6 @@ export default function CreateChallenge() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [status, setStatus] =
     useState<(typeof CHALLENGE_STATUSES)[number]>("draft");
   const [busy, setBusy] = useState(false);
@@ -38,7 +37,8 @@ export default function CreateChallenge() {
         description: description.trim() || null,
         status,
         start_date: startDate,
-        end_date: endDate,
+        // Provisional until a reading plan is generated, which sets the real end.
+        end_date: startDate,
         created_by: user.id,
       })
       .select("id")
@@ -90,16 +90,6 @@ export default function CreateChallenge() {
           />
         </label>
         <label className="flex-1 text-xs text-muted dark:text-white/60">
-          End
-          <input
-            required
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
-          />
-        </label>
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
           Status
           <select
             value={status}
@@ -116,6 +106,9 @@ export default function CreateChallenge() {
           </select>
         </label>
       </div>
+      <p className="text-xs text-muted">
+        The end date is set automatically when you generate a reading plan.
+      </p>
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-2">
         <button
