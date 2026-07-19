@@ -71,24 +71,27 @@ export default function PlanBuilder({
   return (
     <div className="space-y-4">
       {/* Presets */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-xs font-medium text-muted">Quick add:</span>
         {BOOK_PRESETS.map((p) => (
           <button
             key={p.label}
             type="button"
             onClick={() => applyPreset(p.books)}
-            className="rounded-full border border-hair px-3 py-1 text-xs text-muted hover:text-heading"
+            className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-heading hover:bg-brand/20"
           >
             {p.label}
           </button>
         ))}
-        <button
-          type="button"
-          onClick={() => setSegments([])}
-          className="rounded-full border border-hair px-3 py-1 text-xs text-muted hover:text-heading"
-        >
-          Clear
-        </button>
+        {segments.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setSegments([])}
+            className="ml-auto rounded-full border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-500/10"
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
       {/* Multi-select book checklist */}

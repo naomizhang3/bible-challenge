@@ -88,7 +88,6 @@ export const BOOK_PRESETS: { label: string; books: string[] }[] = [
     books: BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => b.name),
   },
   { label: "Gospels", books: ["Matthew", "Mark", "Luke", "John"] },
-  { label: "Psalms & Proverbs", books: ["Psalms", "Proverbs"] },
 ];
 
 export type PlanReading = {
