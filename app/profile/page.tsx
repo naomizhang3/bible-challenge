@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { createClient } from "../../src/lib/supabase/server";
+import AppHeader from "../app-header";
 import ProfileForm from "./profile-form";
 
-// Protected by the proxy; a signed-in user is guaranteed here.
 export default async function ProfilePage() {
   const supabase = await createClient();
   const {
@@ -11,28 +10,54 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, created_at")
+    .select("id, display_name, avatar_url, is_admin")
     .eq("id", user!.id)
     .single();
 
+  const initial =
+    (profile?.display_name ?? "").trim().charAt(0).toUpperCase() || "?";
+
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <Link
-          href="/"
-          className="text-sm text-black/60 underline dark:text-white/60"
-        >
-          Home
-        </Link>
-      </div>
-
-      <p className="text-sm text-black/60 dark:text-white/60">{user!.email}</p>
-
-      <ProfileForm
-        initialDisplayName={profile?.display_name ?? ""}
-        initialAvatarUrl={profile?.avatar_url ?? ""}
+    <div className="flex flex-1 flex-col">
+      <AppHeader
+        displayName={profile?.display_name}
+        avatarUrl={profile?.avatar_url}
+        isAdmin={profile?.is_admin}
       />
-    </main>
+      <main className="mx-auto w-full max-w-md flex-1 space-y-6 p-5">
+        <h1 className="font-serif text-3xl font-bold text-heading">Profile</h1>
+
+        <div className="flex items-center gap-4 rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand text-2xl font-semibold text-white">
+            {profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar_url}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initial
+            )}
+          </span>
+          <div className="min-w-0">
+            <div className="truncate font-serif text-xl font-semibold text-heading">
+              {profile?.display_name ?? "—"}
+            </div>
+            <div className="truncate text-sm text-muted">{user!.email}</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold text-muted">
+            Edit profile
+          </h2>
+          <ProfileForm
+            initialDisplayName={profile?.display_name ?? ""}
+            initialAvatarUrl={profile?.avatar_url ?? ""}
+          />
+        </div>
+      </main>
+    </div>
   );
 }

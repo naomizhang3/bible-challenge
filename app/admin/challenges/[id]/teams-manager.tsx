@@ -63,19 +63,19 @@ export default function TeamsManager({
           value={name}
           placeholder="New team name"
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+          className="flex-1 rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
         />
         <button
           type="submit"
           disabled={busy || !name.trim()}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           Create
         </button>
       </form>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
-      <ul className="divide-y divide-black/5 dark:divide-white/10">
+      <ul className="divide-y divide-hair dark:divide-white/10">
         {teams.map((t) => (
           <li
             key={t.id}
@@ -83,7 +83,7 @@ export default function TeamsManager({
           >
             <span>
               {t.name}{" "}
-              <span className="text-black/50 dark:text-white/50">
+              <span className="text-muted dark:text-white/50">
                 · {t.memberCount} member{t.memberCount === 1 ? "" : "s"}
               </span>
             </span>
@@ -96,7 +96,7 @@ export default function TeamsManager({
           </li>
         ))}
         {teams.length === 0 && (
-          <li className="py-2 text-sm text-black/60 dark:text-white/60">
+          <li className="py-2 text-sm text-muted dark:text-white/60">
             No teams yet.
           </li>
         )}

@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "../../../src/lib/supabase/server";
 import { todayInTz, weekBoundsFromISO } from "../../../src/lib/dates";
+import AppHeader from "../../app-header";
 import JoinButton from "../join-button";
 import MarkComplete from "./mark-complete";
 import BackfillButton from "./backfill-button";
+import LeaveChallengeButton from "./leave-challenge-button";
 
 export default async function ChallengeDetailPage({
   params,
@@ -19,19 +21,18 @@ export default async function ChallengeDetailPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("timezone")
+    .select("display_name, avatar_url, is_admin, timezone")
     .eq("id", user!.id)
     .single();
   const tz = profile?.timezone ?? "UTC";
   const today = todayInTz(tz);
-  const { start: weekStart, end: weekEnd } = weekBoundsFromISO(today);
+  const { start: weekStart } = weekBoundsFromISO(today);
 
   const { data: challenge } = await supabase
     .from("challenges")
-    .select("id, name, description, start_date, end_date")
+    .select("id, name, description")
     .eq("id", id)
     .single();
-
   if (!challenge) notFound();
 
   const { data: participant } = await supabase
@@ -41,19 +42,30 @@ export default async function ChallengeDetailPage({
     .eq("user_id", user!.id)
     .maybeSingle();
 
-  // Not joined yet — prompt to join.
+  const header = (
+    <AppHeader
+      displayName={profile?.display_name}
+      avatarUrl={profile?.avatar_url}
+      isAdmin={profile?.is_admin}
+    />
+  );
+
+  // Not joined — prompt to join.
   if (!participant) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
-        <BackLink />
-        <h1 className="text-2xl font-semibold">{challenge.name}</h1>
-        <p className="text-black/60 dark:text-white/60">
-          Join this challenge to see today&apos;s reading.
-        </p>
-        <div>
+      <div className="flex flex-1 flex-col">
+        {header}
+        <main className="mx-auto w-full max-w-xl flex-1 space-y-4 p-5">
+          <BackLink />
+          <h1 className="font-serif text-3xl font-bold text-heading">
+            {challenge.name}
+          </h1>
+          <p className="text-muted">
+            Join this challenge to see today&apos;s reading.
+          </p>
           <JoinButton challengeId={challenge.id} />
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
@@ -63,7 +75,7 @@ export default async function ChallengeDetailPage({
     .select("id, day_number, date, display_text")
     .eq("challenge_id", id)
     .gte("date", weekStart)
-    .lte("date", weekEnd)
+    .lte("date", weekBoundsFromISO(today).end)
     .order("date", { ascending: true });
 
   const ids = (weekReadings ?? []).map((r) => r.id);
@@ -86,151 +98,288 @@ export default async function ChallengeDetailPage({
   const todayProgress = todayReading
     ? progressByReading.get(todayReading.id) ?? null
     : null;
-
-  // Past days this week (for the catch-up section).
   const pastDays = (weekReadings ?? []).filter((r) => r.date < today);
 
-  const { data: stats } = await supabase
+  // Stats.
+  const { data: li } = await supabase
     .from("individual_leaderboard")
     .select("total_points, current_streak, weekly_streak, rank")
     .eq("challenge_id", id)
     .eq("user_id", user!.id)
     .maybeSingle();
+  const { data: ws } = await supabase
+    .from("weekly_scores")
+    .select("weekly_points")
+    .eq("participant_id", participant.id)
+    .eq("week_start", weekStart)
+    .maybeSingle();
+  const { count: daysRead } = await supabase
+    .from("reading_progress")
+    .select("*", { count: "exact", head: true })
+    .eq("participant_id", participant.id);
+
+  const tabClass =
+    "rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface-muted";
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
-      <BackLink />
+    <div className="flex flex-1 flex-col">
+      {header}
+      <main className="mx-auto w-full max-w-xl flex-1 space-y-6 p-5">
+        <div>
+          <BackLink />
+          <h1 className="mt-2 font-serif text-3xl font-bold leading-tight text-heading">
+            {challenge.name}
+          </h1>
+          {challenge.description && (
+            <p className="mt-1 text-sm text-muted">
+              {challenge.description}
+            </p>
+          )}
+        </div>
 
-      <div>
-        <h1 className="text-2xl font-semibold">{challenge.name}</h1>
-        {challenge.description && (
-          <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-            {challenge.description}
-          </p>
-        )}
-        <div className="mt-3 flex gap-4 text-sm">
-          <Link
-            href={`/challenges/${id}/leaderboard`}
-            className="underline text-black/70 dark:text-white/70"
-          >
+        <nav className="flex flex-wrap gap-1">
+          <span className="rounded-full bg-brand px-3 py-1.5 text-sm font-medium text-white">
+            Today
+          </span>
+          <Link href={`/challenges/${id}/leaderboard`} className={tabClass}>
             Leaderboard
           </Link>
-          <Link
-            href={`/challenges/${id}/teams`}
-            className="underline text-black/70 dark:text-white/70"
-          >
+          <Link href={`/challenges/${id}/teams`} className={tabClass}>
             Teams
           </Link>
-          <Link
-            href={`/challenges/${id}/calendar`}
-            className="underline text-black/70 dark:text-white/70"
-          >
+          <Link href={`/challenges/${id}/calendar`} className={tabClass}>
             Calendar
           </Link>
-        </div>
-      </div>
+        </nav>
 
-      <div className="grid grid-cols-4 gap-3 text-center">
-        <Stat label="Points" value={stats?.total_points ?? 0} />
-        <Stat label="Streak" value={stats?.current_streak ?? 0} />
-        <Stat label="This week" value={stats?.weekly_streak ?? 0} />
-        <Stat label="Rank" value={stats?.rank ?? "—"} />
-      </div>
-
-      <section className="rounded-xl border border-black/10 p-5 dark:border-white/15">
-        <h2 className="text-sm font-medium text-black/60 dark:text-white/60">
-          Today&apos;s reading · {today}
-        </h2>
-        {todayReading ? (
-          <>
-            <p className="mt-1 text-xl font-semibold">
-              {todayReading.display_text}
-            </p>
-            <p className="text-xs text-black/50 dark:text-white/50">
-              Day {todayReading.day_number}
-            </p>
-            <div className="mt-4">
-              <MarkComplete
-                participantId={participant.id}
-                readingId={todayReading.id}
-                initialProgress={
-                  todayProgress
-                    ? {
-                        id: todayProgress.id,
-                        read_with_someone: todayProgress.read_with_someone,
-                      }
-                    : null
-                }
-                companionUsedThisWeek={companionUsedThisWeek}
-              />
+        {/* Today's reading hero */}
+        <section className="overflow-hidden rounded-2xl border border-hair bg-surface shadow-sm">
+          <div className="h-1.5 bg-amber-400" />
+          <div className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Today&apos;s reading
+                </p>
+                {todayReading ? (
+                  <>
+                    <h2 className="mt-1 font-serif text-3xl font-bold text-heading">
+                      {todayReading.display_text}
+                    </h2>
+                    <p className="text-sm text-muted">
+                      Day {todayReading.day_number} of the reading plan
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-muted">
+                    No reading scheduled for today.
+                  </p>
+                )}
+              </div>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-heading">
+                <BookOpen />
+              </span>
             </div>
-          </>
-        ) : (
-          <p className="mt-2 text-black/60 dark:text-white/60">
-            No reading scheduled for today.
-          </p>
-        )}
-      </section>
 
-      {pastDays.length > 0 && (
-        <section className="rounded-xl border border-black/10 p-5 dark:border-white/15">
-          <h2 className="text-sm font-medium text-black/60 dark:text-white/60">
-            Catch up this week
-          </h2>
-          <p className="mb-3 text-xs text-black/50 dark:text-white/50">
-            Backfill a missed day until Saturday 11:59pm. Catch-up counts as +1
-            and doesn&apos;t affect your streak.
-          </p>
-          <ul className="divide-y divide-black/5 dark:divide-white/10">
-            {pastDays.map((r) => {
-              const p = progressByReading.get(r.id);
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between py-2 text-sm"
-                >
-                  <span>
-                    <span className="text-black/50 dark:text-white/50">
-                      {r.date}
-                    </span>{" "}
-                    — {r.display_text}
-                  </span>
-                  {p ? (
-                    <span className="text-xs text-green-700 dark:text-green-400">
-                      {p.is_backfill ? "✓ backfilled" : "✓ done"}
-                    </span>
-                  ) : (
-                    <BackfillButton
-                      participantId={participant.id}
-                      readingId={r.id}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+            {todayReading && (
+              <div className="mt-5">
+                <MarkComplete
+                  participantId={participant.id}
+                  readingId={todayReading.id}
+                  initialProgress={
+                    todayProgress
+                      ? {
+                          id: todayProgress.id,
+                          read_with_someone: todayProgress.read_with_someone,
+                        }
+                      : null
+                  }
+                  companionUsedThisWeek={companionUsedThisWeek}
+                />
+              </div>
+            )}
+          </div>
         </section>
-      )}
-    </main>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <Stat
+            icon={<Trophy />}
+            tint="text-heading"
+            value={li?.total_points ?? 0}
+            label="Total Points"
+          />
+          <Stat
+            icon={<Star />}
+            tint="text-amber-500"
+            value={ws?.weekly_points ?? 0}
+            label="Points This Week"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <Stat
+            icon={<Flame />}
+            tint="text-red-500"
+            value={li?.current_streak ?? 0}
+            label="Total Streak"
+          />
+          <Stat
+            icon={<Calendar />}
+            tint="text-amber-500"
+            value={li?.weekly_streak ?? 0}
+            label="Week Streak"
+          />
+          <Stat
+            icon={<BookOpen />}
+            tint="text-emerald-600"
+            value={daysRead ?? 0}
+            label="Days Read"
+          />
+        </div>
+
+        {/* Catch up */}
+        {pastDays.length > 0 && (
+          <section className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-muted">
+              Catch up this week
+            </h2>
+            <p className="mb-3 text-xs text-muted">
+              Backfill a missed day until Saturday 11:59pm. Catch-up counts as +1
+              and doesn&apos;t affect your streak.
+            </p>
+            <ul className="divide-y divide-hair">
+              {pastDays.map((r) => {
+                const p = progressByReading.get(r.id);
+                return (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span>
+                      <span className="text-muted">{r.date}</span> —{" "}
+                      {r.display_text}
+                    </span>
+                    {p ? (
+                      <span className="text-xs font-medium text-emerald-600">
+                        {p.is_backfill ? "✓ backfilled" : "✓ done"}
+                      </span>
+                    ) : (
+                      <BackfillButton
+                        participantId={participant.id}
+                        readingId={r.id}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        <div className="pt-1">
+          <LeaveChallengeButton participantId={participant.id} />
+        </div>
+      </main>
+    </div>
   );
 }
 
 function BackLink() {
   return (
     <Link
-      href="/challenges"
-      className="text-sm text-black/60 underline dark:text-white/60"
+      href="/"
+      className="text-sm text-muted hover:text-heading"
     >
-      ← All challenges
+      ← Home
     </Link>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Stat({
+  icon,
+  tint,
+  value,
+  label,
+}: {
+  icon: React.ReactNode;
+  tint: string;
+  value: number | string;
+  label: string;
+}) {
   return (
-    <div className="rounded-lg border border-black/10 p-3 dark:border-white/15">
-      <div className="text-lg font-semibold">{value}</div>
-      <div className="text-xs text-black/50 dark:text-white/50">{label}</div>
+    <div className="rounded-2xl border border-hair bg-surface p-4 shadow-sm">
+      <span className={tint}>{icon}</span>
+      <div className="mt-2 font-serif text-2xl font-bold text-heading">
+        {value}
+      </div>
+      <div className="text-xs text-muted">{label}</div>
     </div>
+  );
+}
+
+function BookOpen() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 6.5A6 6 0 0 0 6 4c-1 0-2 .2-3 .5v13A6 6 0 0 1 6 17c2.2 0 4 .8 6 2m0-12.5A6 6 0 0 1 18 4c1 0 2 .2 3 .5v13A6 6 0 0 0 18 17a6 6 0 0 0-6 2m0-12.5V19" />
+    </svg>
+  );
+}
+function Trophy() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4ZM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+    </svg>
+  );
+}
+function Star() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 2.5z" />
+    </svg>
+  );
+}
+function Flame() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2c.5 3-1.5 4.5-3 6.5C7 11 6 13 6 15a6 6 0 0 0 12 0c0-1.7-.7-3.4-2-5 .2 1.3-.4 2.4-1.3 2.8.6-2.2-.3-4.9-2.7-6.3.6 1.9-.2 3.3-1 4-.3-2.6.9-5.6 1-8.5z" />
+    </svg>
+  );
+}
+function Calendar() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="4.5" width="18" height="16" rx="2" />
+      <path d="M3 9h18M8 3v3M16 3v3" />
+    </svg>
   );
 }

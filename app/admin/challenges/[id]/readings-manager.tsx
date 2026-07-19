@@ -65,40 +65,40 @@ export default function ReadingsManager({
           placeholder="Day"
           value={dayNumber}
           onChange={(e) => setDayNumber(e.target.value)}
-          className="w-16 rounded-md border border-black/15 px-2 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+          className="w-16 rounded-md border border-hair px-2 py-2 text-sm dark:border-white/20 dark:bg-transparent"
         />
         <input
           required
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-black/15 px-2 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+          className="rounded-md border border-hair px-2 py-2 text-sm dark:border-white/20 dark:bg-transparent"
         />
         <input
           required
           placeholder="Passage (e.g. Hebrews 1)"
           value={displayText}
           onChange={(e) => setDisplayText(e.target.value)}
-          className="flex-1 rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+          className="flex-1 rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
         />
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           Add
         </button>
       </form>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
-      <ul className="divide-y divide-black/5 dark:divide-white/10">
+      <ul className="divide-y divide-hair dark:divide-white/10">
         {readings.map((r) => (
           <li
             key={r.id}
             className="flex items-center justify-between py-2 text-sm"
           >
             <span>
-              <span className="text-black/50 dark:text-white/50">
+              <span className="text-muted dark:text-white/50">
                 Day {r.day_number} · {r.date}
               </span>{" "}
               — {r.display_text}
@@ -112,7 +112,7 @@ export default function ReadingsManager({
           </li>
         ))}
         {readings.length === 0 && (
-          <li className="py-2 text-sm text-black/60 dark:text-white/60">
+          <li className="py-2 text-sm text-muted dark:text-white/60">
             No readings yet.
           </li>
         )}

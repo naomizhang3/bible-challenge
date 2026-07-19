@@ -40,14 +40,14 @@ export default function MembersManager({
 
   if (members.length === 0) {
     return (
-      <p className="text-sm text-black/60 dark:text-white/60">
+      <p className="text-sm text-muted dark:text-white/60">
         No participants yet.
       </p>
     );
   }
 
   return (
-    <ul className="divide-y divide-black/5 dark:divide-white/10">
+    <ul className="divide-y divide-hair dark:divide-white/10">
       {members.map((m) => (
         <li
           key={m.id}
@@ -58,7 +58,7 @@ export default function MembersManager({
             value={m.teamId ?? ""}
             disabled={busyId === m.id}
             onChange={(e) => assign(m.id, e.target.value || null)}
-            className="rounded-md border border-black/15 px-2 py-1 text-sm dark:border-white/20 dark:bg-transparent"
+            className="rounded-md border border-hair px-2 py-1 text-sm dark:border-white/20 dark:bg-transparent"
           >
             <option value="">No team</option>
             {teams.map((t) => (

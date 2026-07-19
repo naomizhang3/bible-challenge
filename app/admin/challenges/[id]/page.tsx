@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getViewer } from "../../../../src/lib/admin";
+import AppHeader from "../../../app-header";
 import EditChallenge from "./edit-challenge";
 import PlanGenerator from "./plan-generator";
 import ReadingsManager from "./readings-manager";
@@ -26,6 +27,12 @@ export default async function AdminChallengePage({
   // Global admin OR the challenge owner may administer it.
   const canAdmin = isAdmin || challenge.created_by === user!.id;
   if (!canAdmin) redirect("/admin");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user!.id)
+    .single();
 
   const { data: readings } = await supabase
     .from("readings")
@@ -64,18 +71,23 @@ export default async function AdminChallengePage({
   }));
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 p-8">
-      <div>
-        <Link
-          href="/admin"
-          className="text-sm text-black/60 underline dark:text-white/60"
-        >
-          ← Admin
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{challenge.name}</h1>
-      </div>
+    <div className="flex flex-1 flex-col">
+      <AppHeader
+        displayName={profile?.display_name}
+        avatarUrl={profile?.avatar_url}
+        isAdmin={isAdmin}
+      />
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-5">
+        <div>
+          <Link href="/admin" className="text-sm text-muted hover:text-heading">
+            ← Admin
+          </Link>
+          <h1 className="mt-2 font-serif text-3xl font-bold text-heading">
+            {challenge.name}
+          </h1>
+        </div>
 
-      <Section title="Challenge">
+        <Section title="Challenge">
         <EditChallenge challenge={challenge} />
       </Section>
 
@@ -92,10 +104,11 @@ export default async function AdminChallengePage({
         <TeamsManager challengeId={id} teams={teamsWithCounts} />
       </Section>
 
-      <Section title="Members">
-        <MembersManager members={members} teams={teams ?? []} />
-      </Section>
-    </main>
+        <Section title="Members">
+          <MembersManager members={members} teams={teams ?? []} />
+        </Section>
+      </main>
+    </div>
   );
 }
 
@@ -107,11 +120,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-medium text-black/60 dark:text-white/60">
+    <section className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+      <h2 className="mb-3 font-serif text-lg font-semibold text-heading">
         {title}
       </h2>
-      {children}
+      <div className="space-y-3">{children}</div>
     </section>
   );
 }

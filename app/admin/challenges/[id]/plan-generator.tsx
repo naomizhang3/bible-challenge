@@ -103,7 +103,7 @@ export default function PlanGenerator({
   const nt = BIBLE_BOOKS.filter((b) => b.testament === "NT");
 
   return (
-    <div className="space-y-4 rounded-xl border border-black/10 p-5 dark:border-white/15">
+    <div className="space-y-4 rounded-xl border border-hair p-5 dark:border-white/15">
       {/* Presets */}
       <div className="flex flex-wrap gap-2">
         {BOOK_PRESETS.map((p) => (
@@ -111,7 +111,7 @@ export default function PlanGenerator({
             key={p.label}
             type="button"
             onClick={() => applyPreset(p.books)}
-            className="rounded-full border border-black/15 px-3 py-1 text-xs dark:border-white/20"
+            className="rounded-full border border-hair px-3 py-1 text-xs dark:border-white/20"
           >
             {p.label}
           </button>
@@ -119,7 +119,7 @@ export default function PlanGenerator({
         <button
           type="button"
           onClick={() => applyPreset([])}
-          className="rounded-full border border-black/15 px-3 py-1 text-xs dark:border-white/20"
+          className="rounded-full border border-hair px-3 py-1 text-xs dark:border-white/20"
         >
           Clear
         </button>
@@ -132,7 +132,7 @@ export default function PlanGenerator({
           { title: "New Testament", books: nt },
         ].map((col) => (
           <div key={col.title}>
-            <div className="mb-1 text-xs font-medium text-black/50 dark:text-white/50">
+            <div className="mb-1 text-xs font-medium text-muted dark:text-white/50">
               {col.title}
             </div>
             <div className="max-h-56 overflow-y-auto pr-1">
@@ -147,7 +147,7 @@ export default function PlanGenerator({
                     onChange={() => toggle(b.name)}
                   />
                   <span className="flex-1">{b.name}</span>
-                  <span className="text-xs text-black/40 dark:text-white/40">
+                  <span className="text-xs text-muted dark:text-white/40">
                     {b.chapters}
                   </span>
                 </label>
@@ -159,27 +159,27 @@ export default function PlanGenerator({
 
       {/* Options */}
       <div className="flex flex-wrap items-end gap-3">
-        <label className="text-xs text-black/60 dark:text-white/60">
+        <label className="text-xs text-muted dark:text-white/60">
           Chapters / day
           <input
             type="number"
             min={1}
             value={perDay}
             onChange={(e) => setPerDay(Math.max(1, Number(e.target.value)))}
-            className="mt-1 w-20 rounded-md border border-black/15 px-2 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 w-20 rounded-md border border-hair px-2 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="text-xs text-black/60 dark:text-white/60">
+        <label className="text-xs text-muted dark:text-white/60">
           Start date
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 rounded-md border border-black/15 px-2 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 rounded-md border border-hair px-2 py-1.5 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
         {hasReadings && (
-          <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60">
+          <label className="flex items-center gap-2 text-xs text-muted dark:text-white/60">
             <input
               type="checkbox"
               checked={replace}
@@ -192,7 +192,7 @@ export default function PlanGenerator({
 
       {/* Preview + action */}
       {plan.length > 0 && (
-        <p className="text-sm text-black/70 dark:text-white/70">
+        <p className="text-sm text-content dark:text-white/70">
           {plan.length} day{plan.length === 1 ? "" : "s"} · {plan[0].display_text}{" "}
           → {plan[plan.length - 1].display_text} · ends{" "}
           {plan[plan.length - 1].date}
@@ -207,7 +207,7 @@ export default function PlanGenerator({
         type="button"
         onClick={generate}
         disabled={busy || plan.length === 0}
-        className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {busy ? "Generating…" : "Generate plan"}
       </button>

@@ -32,10 +32,10 @@ export default function TeamMembershipButton({
       onClick={() => setTeam(isCurrent ? null : teamId)}
       disabled={busy}
       className={
-        "shrink-0 rounded-md px-3 py-1.5 text-sm disabled:opacity-50 " +
+        "shrink-0 rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 " +
         (isCurrent
-          ? "border border-black/15 dark:border-white/20"
-          : "bg-foreground text-background")
+          ? "border border-hair text-muted"
+          : "bg-brand text-white")
       }
     >
       {busy ? "…" : isCurrent ? "Leave" : "Join"}

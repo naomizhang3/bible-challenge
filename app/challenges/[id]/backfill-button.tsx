@@ -40,7 +40,7 @@ export default function BackfillButton({
       <button
         onClick={backfill}
         disabled={busy}
-        className="rounded-md border border-black/15 px-3 py-1 text-xs disabled:opacity-50 dark:border-white/20"
+        className="rounded-lg border border-brand/30 px-3 py-1.5 text-xs font-medium text-heading disabled:opacity-50"
       >
         {busy ? "…" : "Backfill +1"}
       </button>

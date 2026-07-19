@@ -49,7 +49,7 @@ export default function InstallPrompt() {
           await deferred.userChoice;
           setDeferred(null);
         }}
-        className="rounded-md border border-black/15 px-4 py-2 text-sm dark:border-white/20"
+        className="rounded-md border border-hair px-4 py-2 text-sm dark:border-white/20"
       >
         Install app
       </button>
@@ -59,7 +59,7 @@ export default function InstallPrompt() {
   // iOS Safari has no install event — show instructions instead.
   if (isIOS) {
     return (
-      <p className="max-w-xs text-center text-xs text-black/50 dark:text-white/50">
+      <p className="max-w-xs text-center text-xs text-muted dark:text-white/50">
         To install: tap Share <span aria-hidden>⎋</span> then “Add to Home
         Screen”.
       </p>

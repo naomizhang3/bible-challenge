@@ -163,6 +163,7 @@ export type Database = {
           participant_id: string
           read_with_someone: boolean
           reading_id: string
+          reflection: string | null
         }
         Insert: {
           completed_at?: string
@@ -171,6 +172,7 @@ export type Database = {
           participant_id: string
           read_with_someone?: boolean
           reading_id: string
+          reflection?: string | null
         }
         Update: {
           completed_at?: string
@@ -179,6 +181,7 @@ export type Database = {
           participant_id?: string
           read_with_someone?: boolean
           reading_id?: string
+          reflection?: string | null
         }
         Relationships: [
           {

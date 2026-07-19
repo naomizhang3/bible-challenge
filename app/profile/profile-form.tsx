@@ -81,7 +81,7 @@ export default function ProfileForm({
             setDisplayName(e.target.value);
             setStatus("idle");
           }}
-          className="w-full rounded-md border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          className="w-full rounded-md border border-hair px-3 py-2 dark:border-white/20 dark:bg-transparent"
         />
       </label>
 
@@ -95,7 +95,7 @@ export default function ProfileForm({
             setAvatarUrl(e.target.value);
             setStatus("idle");
           }}
-          className="w-full rounded-md border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          className="w-full rounded-md border border-hair px-3 py-2 dark:border-white/20 dark:bg-transparent"
         />
       </label>
 
@@ -107,7 +107,7 @@ export default function ProfileForm({
       <button
         type="submit"
         disabled={!dirty || !displayName.trim() || status === "saving"}
-        className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+        className="rounded-lg bg-brand px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {status === "saving" ? "Saving…" : "Save changes"}
       </button>

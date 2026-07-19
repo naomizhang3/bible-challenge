@@ -42,7 +42,7 @@ export default function JoinButton({ challengeId }: { challengeId: string }) {
       <button
         onClick={join}
         disabled={loading}
-        className="rounded-md border border-black/15 px-4 py-2 text-sm disabled:opacity-50 dark:border-white/20"
+        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {loading ? "Joining…" : "Join"}
       </button>

@@ -53,7 +53,7 @@ export default function CreateChallenge() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="self-start rounded-md bg-foreground px-4 py-2 text-sm text-background"
+        className="self-start rounded-md bg-brand px-4 py-2 text-sm font-medium text-white"
       >
         + New challenge
       </button>
@@ -63,50 +63,50 @@ export default function CreateChallenge() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-black/10 p-5 dark:border-white/15"
+      className="space-y-3 rounded-xl border border-hair p-5 dark:border-white/15"
     >
       <input
         required
         placeholder="Challenge name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+        className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
       />
       <textarea
         placeholder="Description (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+        className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
       />
       <div className="flex gap-3">
-        <label className="flex-1 text-xs text-black/60 dark:text-white/60">
+        <label className="flex-1 text-xs text-muted dark:text-white/60">
           Start
           <input
             required
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="flex-1 text-xs text-black/60 dark:text-white/60">
+        <label className="flex-1 text-xs text-muted dark:text-white/60">
           End
           <input
             required
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="flex-1 text-xs text-black/60 dark:text-white/60">
+        <label className="flex-1 text-xs text-muted dark:text-white/60">
           Status
           <select
             value={status}
             onChange={(e) =>
               setStatus(e.target.value as (typeof CHALLENGE_STATUSES)[number])
             }
-            className="mt-1 w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           >
             {CHALLENGE_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -121,14 +121,14 @@ export default function CreateChallenge() {
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           {busy ? "Creating…" : "Create"}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-md border border-black/15 px-4 py-2 text-sm dark:border-white/20"
+          className="rounded-md border border-hair px-4 py-2 text-sm dark:border-white/20"
         >
           Cancel
         </button>
