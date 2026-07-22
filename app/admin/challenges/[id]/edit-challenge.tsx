@@ -65,8 +65,8 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
         onChange={(e) => set("description", e.target.value)}
         className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
       />
-      <div className="flex gap-3">
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="text-xs text-muted dark:text-white/60">
           Start
           <input
             type="date"
@@ -75,7 +75,7 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
             className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
+        <label className="text-xs text-muted dark:text-white/60">
           End
           <input
             type="date"
@@ -84,7 +84,7 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
             className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="flex-1 text-xs text-muted dark:text-white/60">
+        <label className="text-xs text-muted dark:text-white/60">
           Status
           <select
             value={form.status}
