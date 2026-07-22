@@ -17,6 +17,12 @@ function fmt(d: Date): string {
   ).padStart(2, "0")}`;
 }
 
+// Shift a YYYY-MM-DD date by n days (n may be negative).
+export function addDaysISO(dateISO: string, n: number): string {
+  const [y, m, d] = dateISO.split("-").map(Number);
+  return fmt(new Date(y, m - 1, d + n));
+}
+
 // Sunday–Saturday bounds for the week containing the given YYYY-MM-DD.
 export function weekBoundsFromISO(dateISO: string): {
   start: string;

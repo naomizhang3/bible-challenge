@@ -1,5 +1,5 @@
 import { createClient } from "../../../src/lib/supabase/server";
-import { todayInTz, weekBoundsFromISO } from "../../../src/lib/dates";
+import { addDaysISO, todayInTz, weekBoundsFromISO } from "../../../src/lib/dates";
 import JoinButton from "../join-button";
 import MarkComplete from "./mark-complete";
 import BackfillButton from "./backfill-button";
@@ -24,6 +24,8 @@ export default async function ChallengeTodayPage({
   const tz = profile?.timezone ?? "UTC";
   const today = todayInTz(tz);
   const { start: weekStart, end: weekEnd } = weekBoundsFromISO(today);
+  // Rolling 7-day backfill window (a missed reading can be made up for a week).
+  const backfillStart = addDaysISO(today, -7);
 
   const { data: participant } = await supabase
     .from("challenge_participants")
@@ -45,16 +47,21 @@ export default async function ChallengeTodayPage({
     );
   }
 
-  const { data: weekReadings } = await supabase
+  // Fetch readings spanning both the rolling backfill window and the rest of
+  // the current week (for today's reading + the weekly companion-bonus check).
+  const { data: rangeReadings } = await supabase
     .from("readings")
     .select("id, day_number, date, display_text")
     .eq("challenge_id", id)
-    .gte("date", weekStart)
+    .gte("date", backfillStart)
     .lte("date", weekEnd)
     .order("date", { ascending: true });
 
-  const ids = (weekReadings ?? []).map((r) => r.id);
-  const { data: weekProgress } = ids.length
+  const dateByReading = new Map(
+    (rangeReadings ?? []).map((r) => [r.id, r.date])
+  );
+  const ids = (rangeReadings ?? []).map((r) => r.id);
+  const { data: progress } = ids.length
     ? await supabase
         .from("reading_progress")
         .select("id, reading_id, is_backfill, read_with_someone")
@@ -63,18 +70,21 @@ export default async function ChallengeTodayPage({
     : { data: [] };
 
   const progressByReading = new Map(
-    (weekProgress ?? []).map((p) => [p.reading_id, p])
+    (progress ?? []).map((p) => [p.reading_id, p])
   );
-  const companionUsedThisWeek = (weekProgress ?? []).some(
-    (p) => p.read_with_someone
-  );
+  // Companion bonus is once per calendar week — only count on-time-week reads.
+  const companionUsedThisWeek = (progress ?? []).some((p) => {
+    const d = dateByReading.get(p.reading_id);
+    return p.read_with_someone && d && d >= weekStart && d <= weekEnd;
+  });
 
   const todayReading =
-    (weekReadings ?? []).find((r) => r.date === today) ?? null;
+    (rangeReadings ?? []).find((r) => r.date === today) ?? null;
   const todayProgress = todayReading
     ? progressByReading.get(todayReading.id) ?? null
     : null;
-  const pastDays = (weekReadings ?? []).filter((r) => r.date < today);
+  // Catch-up: any reading in the last 7 days that isn't today.
+  const pastDays = (rangeReadings ?? []).filter((r) => r.date < today);
 
   const { data: li } = await supabase
     .from("individual_leaderboard")
@@ -184,8 +194,8 @@ export default async function ChallengeTodayPage({
             Catch up this week
           </h2>
           <p className="mb-3 text-xs text-muted">
-            Backfill a missed day until Saturday 11:59pm. Catch-up counts as +1
-            and doesn&apos;t affect your streak.
+            You have one week to back-fill a missed reading. Catch-up counts as
+            +1 and doesn&apos;t affect your streak.
           </p>
           <ul className="divide-y divide-hair">
             {pastDays.map((r) => {
