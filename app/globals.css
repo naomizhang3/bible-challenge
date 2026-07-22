@@ -47,3 +47,10 @@ body {
   color: var(--content);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* iOS gives date inputs a large intrinsic min-width that overflows their
+   container; let them shrink to fit instead. */
+input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
+}
