@@ -83,8 +83,10 @@ export default async function ChallengeTodayPage({
   const todayProgress = todayReading
     ? progressByReading.get(todayReading.id) ?? null
     : null;
-  // Catch-up: any reading in the last 7 days that isn't today.
-  const pastDays = (rangeReadings ?? []).filter((r) => r.date < today);
+  // Catch-up: readings in the last 7 days (excluding today) that were missed.
+  const missedDays = (rangeReadings ?? []).filter(
+    (r) => r.date < today && !progressByReading.has(r.id)
+  );
 
   const { data: li } = await supabase
     .from("individual_leaderboard")
@@ -188,40 +190,28 @@ export default async function ChallengeTodayPage({
         />
       </div>
 
-      {pastDays.length > 0 && (
+      {missedDays.length > 0 && (
         <section className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-muted">
-            Catch up this week
-          </h2>
+          <h2 className="text-sm font-semibold text-muted">Catch up</h2>
           <p className="mb-3 text-xs text-muted">
             You have one week to back-fill a missed reading. Catch-up counts as
             +1 and doesn&apos;t affect your streak.
           </p>
           <ul className="divide-y divide-hair">
-            {pastDays.map((r) => {
-              const p = progressByReading.get(r.id);
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between py-2 text-sm"
-                >
-                  <span>
-                    <span className="text-muted">{r.date}</span> —{" "}
-                    {r.display_text}
-                  </span>
-                  {p ? (
-                    <span className="text-xs font-medium text-emerald-600">
-                      {p.is_backfill ? "✓ backfilled" : "✓ done"}
-                    </span>
-                  ) : (
-                    <BackfillButton
-                      participantId={participant.id}
-                      readingId={r.id}
-                    />
-                  )}
-                </li>
-              );
-            })}
+            {missedDays.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between py-2 text-sm"
+              >
+                <span>
+                  <span className="text-muted">{r.date}</span> — {r.display_text}
+                </span>
+                <BackfillButton
+                  participantId={participant.id}
+                  readingId={r.id}
+                />
+              </li>
+            ))}
           </ul>
         </section>
       )}
