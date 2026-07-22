@@ -49,10 +49,7 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
   }
 
   return (
-    <form
-      onSubmit={save}
-      className="space-y-3 rounded-xl border border-hair p-5 dark:border-white/15"
-    >
+    <form onSubmit={save} className="space-y-3">
       <input
         required
         value={form.name}
