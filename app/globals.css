@@ -48,9 +48,13 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* iOS gives date inputs a large intrinsic min-width that overflows their
-   container; let them shrink to fit instead. */
+/* iOS sizes native date controls to their content and ignores width, so they
+   overflow their container. Resetting appearance makes them respect width
+   (the field still opens the date picker on tap). */
 input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
   min-width: 0;
   max-width: 100%;
+  width: 100%;
 }
