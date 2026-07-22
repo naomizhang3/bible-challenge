@@ -140,6 +140,7 @@ export default async function ChallengeTodayPage({
               <MarkComplete
                 participantId={participant.id}
                 readingId={todayReading.id}
+                readingLabel={todayReading.display_text}
                 initialProgress={
                   todayProgress
                     ? {
