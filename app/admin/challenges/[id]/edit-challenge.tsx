@@ -62,33 +62,33 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
         onChange={(e) => set("description", e.target.value)}
         className="w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
       />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label className="text-xs text-muted dark:text-white/60">
+      <div className="space-y-3">
+        <label className="block text-xs text-muted dark:text-white/60">
           Start
           <input
             type="date"
             value={form.start_date}
             onChange={(e) => set("start_date", e.target.value)}
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 block w-full min-w-0 rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="text-xs text-muted dark:text-white/60">
+        <label className="block text-xs text-muted dark:text-white/60">
           End
           <input
             type="date"
             value={form.end_date}
             onChange={(e) => set("end_date", e.target.value)}
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 block w-full min-w-0 rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           />
         </label>
-        <label className="text-xs text-muted dark:text-white/60">
+        <label className="block text-xs text-muted dark:text-white/60">
           Status
           <select
             value={form.status}
             onChange={(e) =>
               set("status", e.target.value as Challenge["status"])
             }
-            className="mt-1 w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+            className="mt-1 block w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           >
             {CHALLENGE_STATUSES.map((s) => (
               <option key={s} value={s}>
