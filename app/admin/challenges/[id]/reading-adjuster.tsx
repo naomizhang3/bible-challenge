@@ -22,7 +22,16 @@ export default function ReadingAdjuster({
   const router = useRouter();
   const supabase = createClient();
   const [memberId, setMemberId] = useState("");
+  const [memberQuery, setMemberQuery] = useState("");
   const [readingId, setReadingId] = useState("");
+
+  const matches = memberQuery.trim()
+    ? members
+        .filter((m) =>
+          m.displayName.toLowerCase().includes(memberQuery.trim().toLowerCase())
+        )
+        .slice(0, 10)
+    : [];
   const [withSomeone, setWithSomeone] = useState(false);
   const [onTime, setOnTime] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -70,21 +79,44 @@ export default function ReadingAdjuster({
         offline. Marking it on-time keeps their streak intact.
       </p>
 
-      <label className="block text-xs text-muted">
-        Member
-        <select
-          value={memberId}
-          onChange={(e) => setMemberId(e.target.value)}
-          className={`mt-1 ${selectClass}`}
-        >
-          <option value="">Select a member…</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.displayName}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="relative">
+        <label className="block text-xs text-muted">
+          Member
+          <input
+            type="text"
+            value={memberQuery}
+            onChange={(e) => {
+              setMemberQuery(e.target.value);
+              setMemberId("");
+              setMsg(null);
+            }}
+            placeholder="Start typing a name…"
+            className={`mt-1 ${selectClass}`}
+          />
+        </label>
+        {memberQuery.trim() && !memberId && (
+          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-hair bg-surface shadow-lg">
+            {matches.length ? (
+              matches.map((m) => (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberId(m.id);
+                      setMemberQuery(m.displayName);
+                    }}
+                    className="block w-full px-3 py-2 text-left text-sm text-content hover:bg-surface-muted"
+                  >
+                    {m.displayName}
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li className="px-3 py-2 text-sm text-muted">No match</li>
+            )}
+          </ul>
+        )}
+      </div>
 
       <label className="block text-xs text-muted">
         Reading
