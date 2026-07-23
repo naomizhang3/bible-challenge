@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -436,6 +441,19 @@ export type Database = {
       }
     }
     Functions: {
+      admin_remove_reading: {
+        Args: { p_participant: string; p_reading: string }
+        Returns: undefined
+      }
+      admin_set_reading_done: {
+        Args: {
+          p_on_time?: boolean
+          p_participant: string
+          p_reading: string
+          p_with_someone?: boolean
+        }
+        Returns: undefined
+      }
       can_admin_challenge: { Args: { cid: string }; Returns: boolean }
       delete_challenge: { Args: { cid: string }; Returns: undefined }
       is_global_admin: { Args: never; Returns: boolean }
@@ -576,4 +594,3 @@ export const Constants = {
     },
   },
 } as const
-

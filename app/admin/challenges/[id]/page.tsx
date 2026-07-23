@@ -7,6 +7,7 @@ import EditChallenge from "./edit-challenge";
 import PlanEditor from "./plan-editor";
 import TeamsManager from "./teams-manager";
 import MembersManager from "./members-manager";
+import ReadingAdjuster from "./reading-adjuster";
 
 export default async function AdminChallengePage({
   params,
@@ -114,6 +115,10 @@ export default async function AdminChallengePage({
 
         <Section title="Members">
           <MembersManager members={members} teams={teams ?? []} />
+        </Section>
+
+        <Section title="Log a reading">
+          <ReadingAdjuster members={members} readings={readings ?? []} />
         </Section>
 
         <section className="rounded-2xl border border-red-300/60 bg-surface p-5 shadow-sm">
