@@ -31,7 +31,7 @@ export default async function AdminChallengePage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, timezone")
     .eq("id", user!.id)
     .single();
 
@@ -70,6 +70,25 @@ export default async function AdminChallengePage({
       (p.profiles as { display_name: string } | null)?.display_name ??
       "(unknown)",
   }));
+
+  const { data: activity } = await supabase
+    .from("admin_reading_log")
+    .select(
+      "id, actor_name, member_name, reading_label, action, on_time, read_with_someone, created_at"
+    )
+    .eq("challenge_id", id)
+    .order("created_at", { ascending: false })
+    .limit(25);
+
+  const tz = profile?.timezone ?? "UTC";
+  const fmtTime = (ts: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(ts));
 
   return (
     <div className="flex flex-1 flex-col">
@@ -119,6 +138,36 @@ export default async function AdminChallengePage({
 
         <Section title="Log a reading">
           <ReadingAdjuster members={members} readings={readings ?? []} />
+        </Section>
+
+        <Section title="Admin activity">
+          {(activity ?? []).length === 0 ? (
+            <p className="text-sm text-muted">
+              No admin reading changes yet.
+            </p>
+          ) : (
+            <ul className="divide-y divide-hair">
+              {activity!.map((a) => (
+                <li key={a.id} className="py-2 text-sm">
+                  <span className="text-content">
+                    <span className="font-medium text-heading">
+                      {a.actor_name ?? "An admin"}
+                    </span>{" "}
+                    {a.action === "remove" ? "removed" : "logged"}{" "}
+                    <span className="font-medium">{a.reading_label}</span> for{" "}
+                    <span className="font-medium">{a.member_name}</span>
+                  </span>
+                  <span className="block text-xs text-muted">
+                    {a.action === "log" &&
+                      `${a.on_time ? "on-time" : "catch-up"}${
+                        a.read_with_someone ? " · with someone" : ""
+                      } · `}
+                    {fmtTime(a.created_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
 
         <section className="rounded-2xl border border-red-300/60 bg-surface p-5 shadow-sm">

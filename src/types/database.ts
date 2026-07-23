@@ -39,6 +39,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_reading_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          challenge_id: string
+          created_at: string
+          id: string
+          member_name: string | null
+          on_time: boolean | null
+          read_with_someone: boolean | null
+          reading_label: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          challenge_id: string
+          created_at?: string
+          id?: string
+          member_name?: string | null
+          on_time?: boolean | null
+          read_with_someone?: boolean | null
+          reading_label?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          member_name?: string | null
+          on_time?: boolean | null
+          read_with_someone?: boolean | null
+          reading_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_reading_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_reading_log_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
