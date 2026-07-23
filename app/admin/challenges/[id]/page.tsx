@@ -52,17 +52,6 @@ export default async function AdminChallengePage({
     .select("id, user_id, team_id, profiles(display_name)")
     .eq("challenge_id", id);
 
-  // Member counts per team, derived from participants.
-  const memberCounts = new Map<string, number>();
-  for (const p of participants ?? []) {
-    if (p.team_id)
-      memberCounts.set(p.team_id, (memberCounts.get(p.team_id) ?? 0) + 1);
-  }
-  const teamsWithCounts = (teams ?? []).map((t) => ({
-    ...t,
-    memberCount: memberCounts.get(t.id) ?? 0,
-  }));
-
   const members = (participants ?? []).map((p) => ({
     id: p.id,
     teamId: p.team_id,
@@ -128,12 +117,12 @@ export default async function AdminChallengePage({
           />
         </Section>
 
-      <Section title="Teams">
-        <TeamsManager challengeId={id} teams={teamsWithCounts} />
-      </Section>
+        <Section title="Teams">
+          <TeamsManager challengeId={id} teams={teams ?? []} members={members} />
+        </Section>
 
         <Section title="Members">
-          <MembersManager members={members} teams={teams ?? []} />
+          <MembersManager members={members} />
         </Section>
 
         <Section title="Log a reading">
