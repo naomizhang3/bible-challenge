@@ -13,6 +13,7 @@ export default async function OnboardingPage() {
   const { data: groups } = await supabase
     .from("groups")
     .select("id, name")
+    .eq("admin_only", false)
     .order("sort_order", { ascending: true });
 
   return (

@@ -20,7 +20,7 @@ export default async function AdminPage() {
 
   const [{ data: challenges }, { data: groups }] = await Promise.all([
     isAdmin ? query : query.eq("created_by", user!.id),
-    supabase.from("groups").select("id, name").order("sort_order"),
+    supabase.from("groups").select("id, name, admin_only").order("sort_order"),
   ]);
 
   const hasAccess = isAdmin || (challenges && challenges.length > 0);

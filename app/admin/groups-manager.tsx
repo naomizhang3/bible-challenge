@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../src/lib/supabase/client";
 
-type Group = { id: string; name: string };
+type Group = { id: string; name: string; admin_only: boolean };
 
 export default function GroupsManager({ groups }: { groups: Group[] }) {
   const router = useRouter();
   const supabase = createClient();
   const [name, setName] = useState("");
+  const [adminOnly, setAdminOnly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
     setError(null);
     const { error } = await supabase
       .from("groups")
-      .insert({ name: n, sort_order: groups.length + 1 });
+      .insert({ name: n, sort_order: groups.length + 1, admin_only: adminOnly });
     setBusy(false);
     if (error) {
       return setError(
@@ -29,6 +30,7 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
       );
     }
     setName("");
+    setAdminOnly(false);
     router.refresh();
   }
 
@@ -55,20 +57,30 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
 
   return (
     <div className="space-y-3">
-      <form onSubmit={add} className="flex gap-2">
-        <input
-          value={name}
-          placeholder="New group name"
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content placeholder:text-muted"
-        />
-        <button
-          type="submit"
-          disabled={busy || !name.trim()}
-          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          Add
-        </button>
+      <form onSubmit={add} className="space-y-2">
+        <div className="flex gap-2">
+          <input
+            value={name}
+            placeholder="New group name"
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content placeholder:text-muted"
+          />
+          <button
+            type="submit"
+            disabled={busy || !name.trim()}
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            Add
+          </button>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input
+            type="checkbox"
+            checked={adminOnly}
+            onChange={(e) => setAdminOnly(e.target.checked)}
+          />
+          Admin only (only admins can join this group)
+        </label>
       </form>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
@@ -78,7 +90,14 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
             key={g.id}
             className="flex items-center justify-between py-2 text-sm"
           >
-            <span className="text-content">{g.name}</span>
+            <span className="text-content">
+              {g.name}
+              {g.admin_only && (
+                <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-xs text-muted">
+                  admin only
+                </span>
+              )}
+            </span>
             <span className="flex gap-3">
               <button
                 onClick={() => rename(g.id, g.name)}

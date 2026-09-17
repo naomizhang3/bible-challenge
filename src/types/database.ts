@@ -199,18 +199,21 @@ export type Database = {
       }
       groups: {
         Row: {
+          admin_only: boolean
           created_at: string
           id: string
           name: string
           sort_order: number
         }
         Insert: {
+          admin_only?: boolean
           created_at?: string
           id?: string
           name: string
           sort_order?: number
         }
         Update: {
+          admin_only?: boolean
           created_at?: string
           id?: string
           name?: string
