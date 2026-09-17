@@ -19,7 +19,9 @@ export default async function AdminChallengePage({
 
   const { data: challenge } = await supabase
     .from("challenges")
-    .select("id, name, description, status, start_date, end_date, created_by")
+    .select(
+      "id, name, description, status, start_date, end_date, created_by, group_id"
+    )
     .eq("id", id)
     .single();
 
@@ -46,6 +48,11 @@ export default async function AdminChallengePage({
     .select("id, name")
     .eq("challenge_id", id)
     .order("name", { ascending: true });
+
+  const { data: groups } = await supabase
+    .from("groups")
+    .select("id, name")
+    .order("sort_order");
 
   const { data: participants } = await supabase
     .from("challenge_participants")
@@ -96,8 +103,8 @@ export default async function AdminChallengePage({
         </div>
 
         <Section title="Challenge">
-        <EditChallenge challenge={challenge} />
-      </Section>
+          <EditChallenge challenge={challenge} groups={groups ?? []} />
+        </Section>
 
         <Section title="Reading plan">
           <PlanEditor

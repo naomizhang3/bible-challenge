@@ -12,9 +12,16 @@ type Challenge = {
   status: (typeof CHALLENGE_STATUSES)[number];
   start_date: string;
   end_date: string;
+  group_id: string | null;
 };
 
-export default function EditChallenge({ challenge }: { challenge: Challenge }) {
+export default function EditChallenge({
+  challenge,
+  groups,
+}: {
+  challenge: Challenge;
+  groups: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [form, setForm] = useState(challenge);
@@ -38,6 +45,7 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
         status: form.status,
         start_date: form.start_date,
         end_date: form.end_date,
+        group_id: form.group_id,
       })
       .eq("id", challenge.id);
     if (error) {
@@ -93,6 +101,21 @@ export default function EditChallenge({ challenge }: { challenge: Challenge }) {
             {CHALLENGE_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs text-muted dark:text-white/60">
+          Visible to
+          <select
+            value={form.group_id ?? ""}
+            onChange={(e) => set("group_id", e.target.value || null)}
+            className="mt-1 block w-full rounded-md border border-hair px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+          >
+            <option value="">Everyone</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
               </option>
             ))}
           </select>

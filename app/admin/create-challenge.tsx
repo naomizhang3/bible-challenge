@@ -7,7 +7,11 @@ import { CHALLENGE_STATUSES } from "../../src/lib/challenge-status";
 import type { PlanReading } from "../../src/lib/bible";
 import PlanBuilder from "./plan-builder";
 
-export default function CreateChallenge() {
+export default function CreateChallenge({
+  groups,
+}: {
+  groups: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
@@ -15,6 +19,7 @@ export default function CreateChallenge() {
   const [description, setDescription] = useState("");
   const [status, setStatus] =
     useState<(typeof CHALLENGE_STATUSES)[number]>("active");
+  const [groupId, setGroupId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export default function CreateChallenge() {
         start_date: startDate,
         end_date: plan[plan.length - 1].date,
         created_by: user.id,
+        group_id: groupId || null,
       })
       .select("id")
       .single();
@@ -95,22 +101,39 @@ export default function CreateChallenge() {
         onChange={(e) => setDescription(e.target.value)}
         className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content placeholder:text-muted"
       />
-      <label className="block text-xs text-muted">
-        Status
-        <select
-          value={status}
-          onChange={(e) =>
-            setStatus(e.target.value as (typeof CHALLENGE_STATUSES)[number])
-          }
-          className="mt-1 block w-40 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content"
-        >
-          {CHALLENGE_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="flex flex-wrap gap-3">
+        <label className="block text-xs text-muted">
+          Status
+          <select
+            value={status}
+            onChange={(e) =>
+              setStatus(e.target.value as (typeof CHALLENGE_STATUSES)[number])
+            }
+            className="mt-1 block w-40 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content"
+          >
+            {CHALLENGE_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs text-muted">
+          Visible to
+          <select
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            className="mt-1 block w-48 rounded-lg border border-hair bg-background px-3 py-2 text-sm text-content"
+          >
+            <option value="">Everyone</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="border-t border-hair pt-4">
         <h3 className="mb-3 text-sm font-semibold text-heading">

@@ -19,7 +19,7 @@ export const getSessionProfile = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, display_name, timezone, is_admin")
+    .select("id, display_name, timezone, is_admin, group_id")
     .eq("id", user.id)
     .single();
   return data;

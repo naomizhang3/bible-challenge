@@ -8,11 +8,14 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, display_name, is_admin")
-    .eq("id", user!.id)
-    .single();
+  const [{ data: profile }, { data: groups }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, display_name, is_admin, group_id")
+      .eq("id", user!.id)
+      .single(),
+    supabase.from("groups").select("id, name").order("sort_order"),
+  ]);
 
   const initial =
     (profile?.display_name ?? "").trim().charAt(0).toUpperCase() || "?";
@@ -42,7 +45,11 @@ export default async function ProfilePage() {
           <h2 className="mb-4 text-sm font-semibold text-muted">
             Edit profile
           </h2>
-          <ProfileForm initialDisplayName={profile?.display_name ?? ""} />
+          <ProfileForm
+            initialDisplayName={profile?.display_name ?? ""}
+            initialGroupId={profile?.group_id ?? ""}
+            groups={groups ?? []}
+          />
         </div>
       </main>
     </div>

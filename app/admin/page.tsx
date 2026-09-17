@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getViewer } from "../../src/lib/admin";
 import AppHeader from "../app-header";
 import CreateChallenge from "./create-challenge";
+import GroupsManager from "./groups-manager";
 
 export default async function AdminPage() {
   const { supabase, user, isAdmin } = await getViewer();
@@ -17,9 +18,10 @@ export default async function AdminPage() {
     .select("id, name, status, start_date, end_date, created_by")
     .order("start_date", { ascending: false });
 
-  const { data: challenges } = isAdmin
-    ? await query
-    : await query.eq("created_by", user!.id);
+  const [{ data: challenges }, { data: groups }] = await Promise.all([
+    isAdmin ? query : query.eq("created_by", user!.id),
+    supabase.from("groups").select("id, name").order("sort_order"),
+  ]);
 
   const hasAccess = isAdmin || (challenges && challenges.length > 0);
 
@@ -46,7 +48,16 @@ export default async function AdminPage() {
           </div>
         )}
 
-        {isAdmin && <CreateChallenge />}
+        {isAdmin && (
+          <section className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+            <h2 className="mb-3 font-serif text-lg font-semibold text-heading">
+              Groups
+            </h2>
+            <GroupsManager groups={groups ?? []} />
+          </section>
+        )}
+
+        {isAdmin && <CreateChallenge groups={groups ?? []} />}
 
         {hasAccess && (
           <div className="space-y-3">

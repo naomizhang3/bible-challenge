@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "../src/lib/supabase/server";
 import AppHeader from "./app-header";
 import InstallPrompt from "./install-prompt";
@@ -61,7 +62,7 @@ async function HomeContent() {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("display_name, timezone, is_admin")
+        .select("display_name, timezone, is_admin, group_id")
         .eq("id", user!.id)
         .single(),
       supabase
@@ -74,6 +75,9 @@ async function HomeContent() {
         .select("challenge_id, total_points, current_streak, rank")
         .eq("user_id", user!.id),
     ]);
+
+  // New users pick their group first.
+  if (profile && !profile.group_id) redirect("/onboarding");
 
   const tz = profile?.timezone ?? "UTC";
   const firstName = (profile?.display_name ?? "there").split(" ")[0];

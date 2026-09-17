@@ -4,21 +4,29 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../src/lib/supabase/client";
 
+type Group = { id: string; name: string };
+
 export default function ProfileForm({
   initialDisplayName,
+  initialGroupId,
+  groups,
 }: {
   initialDisplayName: string;
+  initialGroupId: string;
+  groups: Group[];
 }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [groupId, setGroupId] = useState(initialGroupId);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
     "idle"
   );
   const [error, setError] = useState<string | null>(null);
 
-  const dirty = displayName.trim() !== initialDisplayName;
+  const dirty =
+    displayName.trim() !== initialDisplayName || groupId !== initialGroupId;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +44,10 @@ export default function ProfileForm({
 
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName.trim() })
+      .update({
+        display_name: displayName.trim(),
+        group_id: groupId || null,
+      })
       .eq("id", user.id);
 
     if (error) {
@@ -64,6 +75,25 @@ export default function ProfileForm({
           }}
           className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-content"
         />
+      </label>
+
+      <label className="block space-y-1">
+        <span className="text-sm font-medium">Group</span>
+        <select
+          value={groupId}
+          onChange={(e) => {
+            setGroupId(e.target.value);
+            setStatus("idle");
+          }}
+          className="w-full rounded-lg border border-hair bg-background px-3 py-2 text-content"
+        >
+          <option value="">No group</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
