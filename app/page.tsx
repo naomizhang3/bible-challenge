@@ -31,39 +31,43 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, timezone, is_admin")
-    .eq("id", user!.id)
-    .single();
+  // Fetch profile, the user's active challenges (joined in one query), and
+  // their standings in parallel — avoids a sequential query waterfall on load.
+  type Ch = {
+    id: string;
+    name: string;
+    description: string | null;
+    start_date: string;
+  };
+  const [{ data: profile }, { data: joinRows }, { data: stats }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("display_name, timezone, is_admin")
+        .eq("id", user!.id)
+        .single(),
+      supabase
+        .from("challenge_participants")
+        .select("challenges!inner(id, name, description, start_date, status)")
+        .eq("user_id", user!.id)
+        .eq("challenges.status", "active"),
+      supabase
+        .from("individual_leaderboard")
+        .select("challenge_id, total_points, current_streak, rank")
+        .eq("user_id", user!.id),
+    ]);
 
   const tz = profile?.timezone ?? "UTC";
   const firstName = (profile?.display_name ?? "there").split(" ")[0];
 
-  // Active challenges the user has joined, with their standing.
-  const { data: parts } = await supabase
-    .from("challenge_participants")
-    .select("challenge_id")
-    .eq("user_id", user!.id);
-  const partChallengeIds = (parts ?? []).map((p) => p.challenge_id);
+  const challenges = (joinRows ?? [])
+    .map((r) => {
+      const c = (r as { challenges: Ch | Ch[] }).challenges;
+      return Array.isArray(c) ? c[0] : c;
+    })
+    .filter((c): c is Ch => Boolean(c))
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
 
-  const { data: challenges } = partChallengeIds.length
-    ? await supabase
-        .from("challenges")
-        .select("id, name, description")
-        .in("id", partChallengeIds)
-        .eq("status", "active")
-        .order("start_date", { ascending: true })
-    : { data: [] };
-  const activeIds = (challenges ?? []).map((c) => c.id);
-
-  const { data: stats } = activeIds.length
-    ? await supabase
-        .from("individual_leaderboard")
-        .select("challenge_id, total_points, current_streak, rank")
-        .eq("user_id", user!.id)
-        .in("challenge_id", activeIds)
-    : { data: [] };
   const statByChallenge = new Map((stats ?? []).map((s) => [s.challenge_id, s]));
 
   return (

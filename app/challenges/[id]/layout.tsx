@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "../../../src/lib/supabase/server";
+import {
+  getMembership,
+  getSessionProfile,
+} from "../../../src/lib/session";
 import AppHeader from "../../app-header";
 import Tabs from "./tabs";
 
@@ -15,29 +19,19 @@ export default async function ChallengeLayout({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, is_admin")
-    .eq("id", user!.id)
-    .single();
-
-  const { data: challenge } = await supabase
-    .from("challenges")
-    .select("id, name, description")
-    .eq("id", id)
-    .single();
+  // Profile and membership are request-cached (shared with the page); the
+  // challenge lookup runs alongside them.
+  const [profile, { data: challenge }, participant] = await Promise.all([
+    getSessionProfile(),
+    supabase
+      .from("challenges")
+      .select("id, name, description")
+      .eq("id", id)
+      .single(),
+    getMembership(id),
+  ]);
   if (!challenge) notFound();
-
-  const { data: participant } = await supabase
-    .from("challenge_participants")
-    .select("id")
-    .eq("challenge_id", id)
-    .eq("user_id", user!.id)
-    .maybeSingle();
 
   return (
     <div className="flex flex-1 flex-col">

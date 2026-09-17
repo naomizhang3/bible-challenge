@@ -1,5 +1,10 @@
 import { createClient } from "../../../src/lib/supabase/server";
 import { addDaysISO, todayInTz, weekBoundsFromISO } from "../../../src/lib/dates";
+import {
+  getMembership,
+  getSessionProfile,
+  getSessionUser,
+} from "../../../src/lib/session";
 import JoinButton from "../join-button";
 import MarkComplete from "./mark-complete";
 import BackfillButton from "./backfill-button";
@@ -12,27 +17,18 @@ export default async function ChallengeTodayPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .eq("id", user!.id)
-    .single();
+  // Profile + membership are request-cached (already fetched by the layout).
+  const [profile, participant, user] = await Promise.all([
+    getSessionProfile(),
+    getMembership(id),
+    getSessionUser(),
+  ]);
   const tz = profile?.timezone ?? "UTC";
   const today = todayInTz(tz);
   const { start: weekStart, end: weekEnd } = weekBoundsFromISO(today);
   // Rolling 7-day backfill window (a missed reading can be made up for a week).
   const backfillStart = addDaysISO(today, -7);
-
-  const { data: participant } = await supabase
-    .from("challenge_participants")
-    .select("id")
-    .eq("challenge_id", id)
-    .eq("user_id", user!.id)
-    .maybeSingle();
 
   if (!participant) {
     return (
@@ -47,15 +43,37 @@ export default async function ChallengeTodayPage({
     );
   }
 
-  // Fetch readings spanning both the rolling backfill window and the rest of
-  // the current week (for today's reading + the weekly companion-bonus check).
-  const { data: rangeReadings } = await supabase
-    .from("readings")
-    .select("id, day_number, date, display_text")
-    .eq("challenge_id", id)
-    .gte("date", backfillStart)
-    .lte("date", weekEnd)
-    .order("date", { ascending: true });
+  // Readings for the range + this participant's stats, in parallel.
+  const [
+    { data: rangeReadings },
+    { data: li },
+    { data: ws },
+    { count: daysRead },
+  ] = await Promise.all([
+    supabase
+      .from("readings")
+      .select("id, day_number, date, display_text")
+      .eq("challenge_id", id)
+      .gte("date", backfillStart)
+      .lte("date", weekEnd)
+      .order("date", { ascending: true }),
+    supabase
+      .from("individual_leaderboard")
+      .select("total_points, current_streak, weekly_streak, rank")
+      .eq("challenge_id", id)
+      .eq("user_id", user!.id)
+      .maybeSingle(),
+    supabase
+      .from("weekly_scores")
+      .select("weekly_points")
+      .eq("participant_id", participant.id)
+      .eq("week_start", weekStart)
+      .maybeSingle(),
+    supabase
+      .from("reading_progress")
+      .select("*", { count: "exact", head: true })
+      .eq("participant_id", participant.id),
+  ]);
 
   const dateByReading = new Map(
     (rangeReadings ?? []).map((r) => [r.id, r.date])
@@ -87,23 +105,6 @@ export default async function ChallengeTodayPage({
   const missedDays = (rangeReadings ?? []).filter(
     (r) => r.date < today && !progressByReading.has(r.id)
   );
-
-  const { data: li } = await supabase
-    .from("individual_leaderboard")
-    .select("total_points, current_streak, weekly_streak, rank")
-    .eq("challenge_id", id)
-    .eq("user_id", user!.id)
-    .maybeSingle();
-  const { data: ws } = await supabase
-    .from("weekly_scores")
-    .select("weekly_points")
-    .eq("participant_id", participant.id)
-    .eq("week_start", weekStart)
-    .maybeSingle();
-  const { count: daysRead } = await supabase
-    .from("reading_progress")
-    .select("*", { count: "exact", head: true })
-    .eq("participant_id", participant.id);
 
   return (
     <>
