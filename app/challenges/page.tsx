@@ -11,15 +11,21 @@ export default async function ChallengesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, is_admin")
+    .select("display_name, is_admin, group_id")
     .eq("id", user!.id)
     .single();
 
-  const { data: challenges } = await supabase
+  // Show the member view: challenges for everyone plus the user's own group
+  // (even for admins/creators, so this page previews what members see).
+  let challengesQuery = supabase
     .from("challenges")
     .select("id, name, description, start_date, end_date")
     .eq("status", "active")
     .order("start_date", { ascending: true });
+  challengesQuery = profile?.group_id
+    ? challengesQuery.or(`group_id.is.null,group_id.eq.${profile.group_id}`)
+    : challengesQuery.is("group_id", null);
+  const { data: challenges } = await challengesQuery;
 
   const { data: memberships } = await supabase
     .from("challenge_participants")
