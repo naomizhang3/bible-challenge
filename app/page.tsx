@@ -76,8 +76,8 @@ async function HomeContent() {
         .eq("user_id", user!.id),
     ]);
 
-  // New users pick their group first.
-  if (profile && !profile.group_id) redirect("/onboarding");
+  // New users pick their group first — admins are exempt (they see everything).
+  if (profile && !profile.group_id && !profile.is_admin) redirect("/onboarding");
 
   const tz = profile?.timezone ?? "UTC";
   const firstName = (profile?.display_name ?? "there").split(" ")[0];

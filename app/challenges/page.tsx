@@ -15,16 +15,20 @@ export default async function ChallengesPage() {
     .eq("id", user!.id)
     .single();
 
-  // Show the member view: challenges for everyone plus the user's own group
-  // (even for admins/creators, so this page previews what members see).
+  // Members see challenges for everyone plus their own group. Admins with a
+  // group get that same preview; admins with no group see everything.
   let challengesQuery = supabase
     .from("challenges")
     .select("id, name, description, start_date, end_date")
     .eq("status", "active")
     .order("start_date", { ascending: true });
-  challengesQuery = profile?.group_id
-    ? challengesQuery.or(`group_id.is.null,group_id.eq.${profile.group_id}`)
-    : challengesQuery.is("group_id", null);
+  if (profile?.group_id) {
+    challengesQuery = challengesQuery.or(
+      `group_id.is.null,group_id.eq.${profile.group_id}`
+    );
+  } else if (!profile?.is_admin) {
+    challengesQuery = challengesQuery.is("group_id", null);
+  }
   const { data: challenges } = await challengesQuery;
 
   const { data: memberships } = await supabase
