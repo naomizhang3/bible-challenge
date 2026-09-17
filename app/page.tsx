@@ -1,7 +1,25 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "../src/lib/supabase/server";
 import AppHeader from "./app-header";
 import InstallPrompt from "./install-prompt";
+import Spinner from "./spinner";
+
+// Renders instantly with a spinner while HomeContent streams in — so opening
+// the app shows immediate feedback instead of a blank hold during SSR.
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 flex-col">
+          <Spinner />
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
+}
 
 function greeting(tz: string) {
   const hour = Number(
@@ -25,7 +43,7 @@ function longDate(tz: string) {
   }).format(new Date());
 }
 
-export default async function Home() {
+async function HomeContent() {
   const supabase = await createClient();
   const {
     data: { user },
