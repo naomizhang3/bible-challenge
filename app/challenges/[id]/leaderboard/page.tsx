@@ -55,6 +55,9 @@ export default async function LeaderboardPage({
     (wk ?? []).map((w) => [w.user_id, w.weekly_points ?? 0])
   );
 
+  const myTeamId =
+    (ind ?? []).find((r) => r.user_id === user!.id)?.team_id ?? null;
+
   const individualsAll: Row[] = (ind ?? []).map((r) => ({
     userId: r.user_id ?? "",
     name: r.display_name ?? "—",
@@ -97,6 +100,7 @@ export default async function LeaderboardPage({
   return (
     <LeaderboardTabs
       meId={user!.id}
+      myTeamId={myTeamId}
       individualsAll={individualsAll}
       individualsWeek={individualsWeek}
       teamsAll={teamsAll}

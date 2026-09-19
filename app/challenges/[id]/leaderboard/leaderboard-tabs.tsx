@@ -19,12 +19,14 @@ export type TeamRow = {
 
 export default function LeaderboardTabs({
   meId,
+  myTeamId,
   individualsAll,
   individualsWeek,
   teamsAll,
   teamsWeek,
 }: {
   meId: string;
+  myTeamId: string | null;
   individualsAll: Row[];
   individualsWeek: Row[];
   teamsAll: TeamRow[];
@@ -99,12 +101,18 @@ export default function LeaderboardTabs({
               key={t.teamId}
               className={
                 "flex items-center gap-3 px-4 py-3 " +
-                (i > 0 ? "border-t border-hair" : "")
+                (i > 0 ? "border-t border-hair " : "") +
+                (t.teamId === myTeamId ? "bg-amber-500/10" : "")
               }
             >
               <RankBadge rank={t.rank} />
               <span className="flex-1 truncate font-serif text-lg text-heading">
                 {t.name}
+                {t.teamId === myTeamId && (
+                  <span className="ml-2 align-middle text-xs text-muted">
+                    your team
+                  </span>
+                )}
                 <span className="ml-2 align-middle text-xs text-muted">
                   {t.members} member{t.members === 1 ? "" : "s"}
                 </span>
