@@ -1,5 +1,4 @@
 import { createClient } from "../../../../src/lib/supabase/server";
-import TeamMembershipButton from "./team-membership-button";
 
 export default async function TeamsPage({
   params,
@@ -36,7 +35,8 @@ export default async function TeamsPage({
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">
-        Join a team below. Teams are created by challenge admins.
+        Teams are managed by challenge admins. Reach out to an admin to be added
+        or moved.
       </p>
 
       {teams?.map((t) => {
@@ -65,11 +65,6 @@ export default async function TeamsPage({
                 {Number(t.avg_points_per_member ?? 0).toFixed(1)} avg pts
               </div>
             </div>
-            <TeamMembershipButton
-              participantId={participant.id}
-              teamId={t.team_id as string}
-              isCurrent={isCurrent}
-            />
           </div>
         );
       })}
