@@ -67,10 +67,10 @@ export default async function TeamsPage({
           <div
             key={t.team_id}
             className={
-              "flex items-center justify-between gap-3 rounded-2xl border bg-surface p-4 shadow-sm " +
+              "flex items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm " +
               (isCurrent
-                ? "border-brand/30 ring-1 ring-brand/20"
-                : "border-hair")
+                ? "border-hair bg-amber-500/10"
+                : "border-hair bg-surface")
             }
           >
             <div className="min-w-0">
