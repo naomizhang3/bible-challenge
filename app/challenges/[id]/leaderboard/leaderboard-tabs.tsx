@@ -70,15 +70,17 @@ export default function LeaderboardTabs({
                 className={
                   "flex items-center gap-3 px-4 py-3 " +
                   (i > 0 ? "border-t border-hair " : "") +
-                  (r.userId === meId ? "bg-amber-500/10" : "")
+                  (r.userId === meId
+                    ? "border-l-4 border-l-amber-500 bg-amber-500/15"
+                    : "")
                 }
               >
                 <RankBadge rank={r.rank} />
                 <span className="flex-1 truncate font-serif text-lg text-heading">
                   {r.name}
                   {r.userId === meId && (
-                    <span className="ml-2 align-middle text-xs text-muted">
-                      you
+                    <span className="ml-2 inline-block rounded-full bg-amber-500 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-white">
+                      You
                     </span>
                   )}
                 </span>
@@ -96,21 +98,25 @@ export default function LeaderboardTabs({
         ) : teams.length === 0 ? (
           <Empty>No teams yet.</Empty>
         ) : (
-          teams.map((t, i) => (
+          teams.map((t, i) => {
+            const mine = t.teamId === myTeamId;
+            return (
             <div
               key={t.teamId}
               className={
                 "flex items-center gap-3 px-4 py-3 " +
                 (i > 0 ? "border-t border-hair " : "") +
-                (t.teamId === myTeamId ? "bg-amber-500/10" : "")
+                (mine
+                  ? "border-l-4 border-l-amber-500 bg-amber-500/15"
+                  : "")
               }
             >
               <RankBadge rank={t.rank} />
               <span className="flex-1 truncate font-serif text-lg text-heading">
                 {t.name}
-                {t.teamId === myTeamId && (
-                  <span className="ml-2 align-middle text-xs text-muted">
-                    your team
+                {mine && (
+                  <span className="ml-2 inline-block rounded-full bg-amber-500 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-white">
+                    Your team
                   </span>
                 )}
                 <span className="ml-2 align-middle text-xs text-muted">
@@ -122,7 +128,8 @@ export default function LeaderboardTabs({
                 <span className="block text-xs text-muted">avg pts</span>
               </span>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
