@@ -32,6 +32,28 @@ export default async function TeamsPage({
     .eq("challenge_id", id)
     .order("team_name", { ascending: true });
 
+  // Member names, grouped by team, to show a roster under each team.
+  const { data: members } = await supabase
+    .from("challenge_participants")
+    .select("user_id, team_id, profiles(display_name)")
+    .eq("challenge_id", id)
+    .not("team_id", "is", null);
+
+  const membersByTeam = new Map<string, { name: string; isMe: boolean }[]>();
+  for (const m of members ?? []) {
+    if (!m.team_id) continue;
+    const profileRel = m.profiles as { display_name: string | null } | null;
+    const list = membersByTeam.get(m.team_id) ?? [];
+    list.push({
+      name: profileRel?.display_name ?? "—",
+      isMe: m.user_id === user!.id,
+    });
+    membersByTeam.set(m.team_id, list);
+  }
+  for (const list of membersByTeam.values()) {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">
@@ -64,6 +86,21 @@ export default async function TeamsPage({
                 {t.member_count} member{t.member_count === 1 ? "" : "s"} ·{" "}
                 {Number(t.avg_points_per_member ?? 0).toFixed(1)} avg pts
               </div>
+              {(() => {
+                const roster = membersByTeam.get(t.team_id as string) ?? [];
+                if (roster.length === 0) return null;
+                return (
+                  <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
+                    {roster.map((m, idx) => (
+                      <span key={idx} className={m.isMe ? "text-heading" : ""}>
+                        {m.name}
+                        {m.isMe && " (you)"}
+                        {idx < roster.length - 1 && ","}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         );
