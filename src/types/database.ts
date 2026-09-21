@@ -157,6 +157,7 @@ export type Database = {
           name: string
           start_date: string
           status: Database["public"]["Enums"]["challenge_status"]
+          weekly_bonus_enabled: boolean
         }
         Insert: {
           created_at?: string
@@ -168,6 +169,7 @@ export type Database = {
           name: string
           start_date: string
           status?: Database["public"]["Enums"]["challenge_status"]
+          weekly_bonus_enabled?: boolean
         }
         Update: {
           created_at?: string
@@ -179,6 +181,7 @@ export type Database = {
           name?: string
           start_date?: string
           status?: Database["public"]["Enums"]["challenge_status"]
+          weekly_bonus_enabled?: boolean
         }
         Relationships: [
           {

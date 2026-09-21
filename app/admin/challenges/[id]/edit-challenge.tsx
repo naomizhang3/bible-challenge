@@ -13,6 +13,7 @@ type Challenge = {
   start_date: string;
   end_date: string;
   group_id: string | null;
+  weekly_bonus_enabled: boolean;
 };
 
 export default function EditChallenge({
@@ -46,6 +47,7 @@ export default function EditChallenge({
         start_date: form.start_date,
         end_date: form.end_date,
         group_id: form.group_id,
+        weekly_bonus_enabled: form.weekly_bonus_enabled,
       })
       .eq("id", challenge.id);
     if (error) {
@@ -119,6 +121,21 @@ export default function EditChallenge({
               </option>
             ))}
           </select>
+        </label>
+        <label className="flex items-start gap-2 text-sm text-content">
+          <input
+            type="checkbox"
+            checked={form.weekly_bonus_enabled}
+            onChange={(e) => set("weekly_bonus_enabled", e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            Weekly bonus
+            <span className="block text-xs text-muted dark:text-white/60">
+              Double a week&apos;s points for completing all 7 days on time. Turn
+              off to track streaks only, with no weekly bonus.
+            </span>
+          </span>
         </label>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

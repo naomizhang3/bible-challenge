@@ -20,6 +20,7 @@ export default function CreateChallenge({
   const [status, setStatus] =
     useState<(typeof CHALLENGE_STATUSES)[number]>("active");
   const [groupId, setGroupId] = useState("");
+  const [weeklyBonus, setWeeklyBonus] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +49,7 @@ export default function CreateChallenge({
         end_date: plan[plan.length - 1].date,
         created_by: user.id,
         group_id: groupId || null,
+        weekly_bonus_enabled: weeklyBonus,
       })
       .select("id")
       .single();
@@ -134,6 +136,22 @@ export default function CreateChallenge({
           </select>
         </label>
       </div>
+
+      <label className="flex items-start gap-2 text-sm text-content">
+        <input
+          type="checkbox"
+          checked={weeklyBonus}
+          onChange={(e) => setWeeklyBonus(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          Weekly bonus
+          <span className="block text-xs text-muted">
+            Double a week&apos;s points for completing all 7 days on time. Turn
+            off to track streaks only, with no weekly bonus.
+          </span>
+        </span>
+      </label>
 
       <div className="border-t border-hair pt-4">
         <h3 className="mb-3 text-sm font-semibold text-heading">

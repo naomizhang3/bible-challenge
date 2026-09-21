@@ -20,7 +20,7 @@ export default async function AdminChallengePage({
   const { data: challenge } = await supabase
     .from("challenges")
     .select(
-      "id, name, description, status, start_date, end_date, created_by, group_id"
+      "id, name, description, status, start_date, end_date, created_by, group_id, weekly_bonus_enabled"
     )
     .eq("id", id)
     .single();
