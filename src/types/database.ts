@@ -93,48 +93,6 @@ export type Database = {
           },
         ]
       }
-      challenge_group_preferences: {
-        Row: {
-          challenge_id: string
-          created_at: string
-          id: string
-          names: string[]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          challenge_id: string
-          created_at?: string
-          id?: string
-          names?: string[]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          challenge_id?: string
-          created_at?: string
-          id?: string
-          names?: string[]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "challenge_group_preferences_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "challenges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenge_group_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -190,7 +148,6 @@ export type Database = {
       }
       challenges: {
         Row: {
-          collect_group_preferences: boolean
           created_at: string
           created_by: string
           description: string | null
@@ -203,7 +160,6 @@ export type Database = {
           weekly_bonus_enabled: boolean
         }
         Insert: {
-          collect_group_preferences?: boolean
           created_at?: string
           created_by: string
           description?: string | null
@@ -216,7 +172,6 @@ export type Database = {
           weekly_bonus_enabled?: boolean
         }
         Update: {
-          collect_group_preferences?: boolean
           created_at?: string
           created_by?: string
           description?: string | null
