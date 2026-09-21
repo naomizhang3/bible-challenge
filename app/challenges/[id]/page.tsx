@@ -78,7 +78,7 @@ export default async function ChallengeTodayPage({
       .eq("participant_id", participant.id),
     supabase
       .from("challenges")
-      .select("collect_group_preferences")
+      .select("collect_group_preferences, start_date")
       .eq("id", id)
       .single(),
     supabase
@@ -177,6 +177,7 @@ export default async function ChallengeTodayPage({
           userId={user!.id}
           hasResponded={groupPref !== null}
           initialNames={groupPref?.names ?? []}
+          locked={today >= challenge.start_date}
         />
       )}
 

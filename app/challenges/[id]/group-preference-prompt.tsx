@@ -9,16 +9,19 @@ export default function GroupPreferencePrompt({
   userId,
   hasResponded,
   initialNames,
+  locked,
 }: {
   challengeId: string;
   userId: string;
   hasResponded: boolean;
   initialNames: string[];
+  locked: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
-  // Auto-open the first time (no response yet); otherwise open on demand.
-  const [open, setOpen] = useState(!hasResponded);
+  // Auto-open the first time (no response yet) — but never once the challenge
+  // has started, when preferences are locked.
+  const [open, setOpen] = useState(!hasResponded && !locked);
   const [names, setNames] = useState<string[]>(initialNames);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -82,6 +85,32 @@ export default function GroupPreferencePrompt({
     setDraft("");
     setOpen(false);
     router.refresh();
+  }
+
+  // Once the challenge has started, preferences are read-only. Show a summary
+  // if they submitted anything; otherwise show nothing.
+  if (locked) {
+    if (names.length === 0) return null;
+    return (
+      <div className="rounded-2xl border border-hair bg-surface px-5 py-4 shadow-sm">
+        <div className="font-serif text-base font-semibold text-heading">
+          Grouping preferences
+        </div>
+        <p className="mb-2 text-xs text-muted">
+          Locked now that the challenge has started.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {names.map((n) => (
+            <span
+              key={n}
+              className="rounded-full bg-surface-muted px-3 py-1 text-sm text-content"
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!open) {
