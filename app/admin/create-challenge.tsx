@@ -21,6 +21,7 @@ export default function CreateChallenge({
     useState<(typeof CHALLENGE_STATUSES)[number]>("active");
   const [groupId, setGroupId] = useState("");
   const [weeklyBonus, setWeeklyBonus] = useState(true);
+  const [collectPrefs, setCollectPrefs] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +51,7 @@ export default function CreateChallenge({
         created_by: user.id,
         group_id: groupId || null,
         weekly_bonus_enabled: weeklyBonus,
+        collect_group_preferences: collectPrefs,
       })
       .select("id")
       .single();
@@ -149,6 +151,22 @@ export default function CreateChallenge({
           <span className="block text-xs text-muted">
             Double a week&apos;s points for completing all 7 days on time. Turn
             off to track streaks only, with no weekly bonus.
+          </span>
+        </span>
+      </label>
+
+      <label className="flex items-start gap-2 text-sm text-content">
+        <input
+          type="checkbox"
+          checked={collectPrefs}
+          onChange={(e) => setCollectPrefs(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          Ask for grouping preferences
+          <span className="block text-xs text-muted">
+            Prompt participants to name who they&apos;d like to be grouped with.
+            Their answers appear on this challenge&apos;s admin page.
           </span>
         </span>
       </label>

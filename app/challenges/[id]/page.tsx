@@ -9,6 +9,7 @@ import JoinButton from "../join-button";
 import MarkComplete from "./mark-complete";
 import BackfillButton from "./backfill-button";
 import LeaveChallengeButton from "./leave-challenge-button";
+import GroupPreferencePrompt from "./group-preference-prompt";
 
 export default async function ChallengeTodayPage({
   params,
@@ -49,6 +50,8 @@ export default async function ChallengeTodayPage({
     { data: li },
     { data: ws },
     { count: daysRead },
+    { data: challenge },
+    { data: groupPref },
   ] = await Promise.all([
     supabase
       .from("readings")
@@ -73,6 +76,17 @@ export default async function ChallengeTodayPage({
       .from("reading_progress")
       .select("*", { count: "exact", head: true })
       .eq("participant_id", participant.id),
+    supabase
+      .from("challenges")
+      .select("collect_group_preferences")
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("challenge_group_preferences")
+      .select("names")
+      .eq("challenge_id", id)
+      .eq("user_id", user!.id)
+      .maybeSingle(),
   ]);
 
   const dateByReading = new Map(
@@ -156,6 +170,15 @@ export default async function ChallengeTodayPage({
           )}
         </div>
       </section>
+
+      {challenge?.collect_group_preferences && (
+        <GroupPreferencePrompt
+          challengeId={id}
+          userId={user!.id}
+          hasResponded={groupPref !== null}
+          initialNames={groupPref?.names ?? []}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Stat

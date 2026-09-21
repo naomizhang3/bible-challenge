@@ -14,6 +14,7 @@ type Challenge = {
   end_date: string;
   group_id: string | null;
   weekly_bonus_enabled: boolean;
+  collect_group_preferences: boolean;
 };
 
 export default function EditChallenge({
@@ -48,6 +49,7 @@ export default function EditChallenge({
         end_date: form.end_date,
         group_id: form.group_id,
         weekly_bonus_enabled: form.weekly_bonus_enabled,
+        collect_group_preferences: form.collect_group_preferences,
       })
       .eq("id", challenge.id);
     if (error) {
@@ -134,6 +136,23 @@ export default function EditChallenge({
             <span className="block text-xs text-muted dark:text-white/60">
               Double a week&apos;s points for completing all 7 days on time. Turn
               off to track streaks only, with no weekly bonus.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm text-content">
+          <input
+            type="checkbox"
+            checked={form.collect_group_preferences}
+            onChange={(e) =>
+              set("collect_group_preferences", e.target.checked)
+            }
+            className="mt-0.5"
+          />
+          <span>
+            Ask for grouping preferences
+            <span className="block text-xs text-muted dark:text-white/60">
+              Prompt participants to name who they&apos;d like to be grouped
+              with. Their answers appear below.
             </span>
           </span>
         </label>

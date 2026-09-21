@@ -20,7 +20,7 @@ export default async function AdminChallengePage({
   const { data: challenge } = await supabase
     .from("challenges")
     .select(
-      "id, name, description, status, start_date, end_date, created_by, group_id, weekly_bonus_enabled"
+      "id, name, description, status, start_date, end_date, created_by, group_id, weekly_bonus_enabled, collect_group_preferences"
     )
     .eq("id", id)
     .single();
@@ -64,6 +64,22 @@ export default async function AdminChallengePage({
     teamId: p.team_id,
     displayName:
       (p.profiles as { display_name: string } | null)?.display_name ??
+      "(unknown)",
+  }));
+
+  const { data: prefRows } = challenge.collect_group_preferences
+    ? await supabase
+        .from("challenge_group_preferences")
+        .select("user_id, names, updated_at, profiles(display_name)")
+        .eq("challenge_id", id)
+        .order("updated_at", { ascending: false })
+    : { data: [] };
+
+  const preferences = (prefRows ?? []).map((r) => ({
+    userId: r.user_id,
+    names: r.names ?? [],
+    displayName:
+      (r.profiles as { display_name: string } | null)?.display_name ??
       "(unknown)",
   }));
 
@@ -131,6 +147,42 @@ export default async function AdminChallengePage({
         <Section title="Members">
           <MembersManager members={members} />
         </Section>
+
+        {challenge.collect_group_preferences && (
+          <Section title="Grouping preferences">
+            {preferences.length === 0 ? (
+              <p className="text-sm text-muted">
+                No one has submitted grouping preferences yet.
+              </p>
+            ) : (
+              <ul className="divide-y divide-hair">
+                {preferences.map((p) => (
+                  <li key={p.userId} className="py-2.5 text-sm">
+                    <span className="font-medium text-heading">
+                      {p.displayName}
+                    </span>
+                    {p.names.length > 0 ? (
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        {p.names.map((n, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full bg-surface-muted px-2.5 py-0.5 text-xs text-content"
+                          >
+                            {n}
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-xs text-muted">
+                        (no preference)
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+        )}
 
         <Section title="Log a reading">
           <ReadingAdjuster members={members} readings={readings ?? []} />
