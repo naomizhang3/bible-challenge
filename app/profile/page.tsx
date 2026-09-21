@@ -14,13 +14,10 @@ export default async function ProfilePage() {
       .select("id, display_name, is_admin, group_id")
       .eq("id", user!.id)
       .single(),
-    supabase.from("groups").select("id, name, admin_only").order("sort_order"),
+    supabase.from("groups").select("id, name").order("sort_order"),
   ]);
 
-  // Non-admins can't pick admin-only groups.
-  const groups = (allGroups ?? []).filter(
-    (g) => profile?.is_admin || !g.admin_only
-  );
+  const groups = allGroups ?? [];
 
   const initial =
     (profile?.display_name ?? "").trim().charAt(0).toUpperCase() || "?";

@@ -11,14 +11,12 @@ export default async function ChallengesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, is_admin, group_id, groups(admin_only)")
+    .select("display_name, is_admin, group_id")
     .eq("id", user!.id)
     .single();
 
-  const groupRel = profile?.groups as { admin_only: boolean } | null;
-  // Admin-only groups (e.g. Serving Ones) and ungrouped admins see everything.
-  const seeAll =
-    Boolean(groupRel?.admin_only) || (!!profile?.is_admin && !profile?.group_id);
+  // Only ungrouped admins see every challenge.
+  const seeAll = !!profile?.is_admin && !profile?.group_id;
 
   // Otherwise: members see challenges for everyone plus their own group.
   let challengesQuery = supabase

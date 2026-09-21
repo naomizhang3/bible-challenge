@@ -4,13 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../src/lib/supabase/client";
 
-type Group = { id: string; name: string; admin_only: boolean };
+type Group = { id: string; name: string };
 
 export default function GroupsManager({ groups }: { groups: Group[] }) {
   const router = useRouter();
   const supabase = createClient();
   const [name, setName] = useState("");
-  const [adminOnly, setAdminOnly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +21,7 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
     setError(null);
     const { error } = await supabase
       .from("groups")
-      .insert({ name: n, sort_order: groups.length + 1, admin_only: adminOnly });
+      .insert({ name: n, sort_order: groups.length + 1 });
     setBusy(false);
     if (error) {
       return setError(
@@ -30,7 +29,6 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
       );
     }
     setName("");
-    setAdminOnly(false);
     router.refresh();
   }
 
@@ -73,14 +71,6 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
             Add
           </button>
         </div>
-        <label className="flex items-center gap-2 text-xs text-muted">
-          <input
-            type="checkbox"
-            checked={adminOnly}
-            onChange={(e) => setAdminOnly(e.target.checked)}
-          />
-          Admin only (only admins can join this group)
-        </label>
       </form>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
@@ -90,14 +80,7 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
             key={g.id}
             className="flex items-center justify-between py-2 text-sm"
           >
-            <span className="text-content">
-              {g.name}
-              {g.admin_only && (
-                <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-xs text-muted">
-                  admin only
-                </span>
-              )}
-            </span>
+            <span className="text-content">{g.name}</span>
             <span className="flex gap-3">
               <button
                 onClick={() => rename(g.id, g.name)}
