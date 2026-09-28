@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../src/lib/supabase/client";
 
-type Group = { id: string; name: string };
+type Group = { id: string; name: string; see_all: boolean };
 
 export default function GroupsManager({ groups }: { groups: Group[] }) {
   const router = useRouter();
   const supabase = createClient();
   const [name, setName] = useState("");
+  const [seeAll, setSeeAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
     setError(null);
     const { error } = await supabase
       .from("groups")
-      .insert({ name: n, sort_order: groups.length + 1 });
+      .insert({ name: n, sort_order: groups.length + 1, see_all: seeAll });
     setBusy(false);
     if (error) {
       return setError(
@@ -29,7 +30,16 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
       );
     }
     setName("");
+    setSeeAll(false);
     router.refresh();
+  }
+
+  async function toggleSeeAll(id: string, next: boolean) {
+    const { error } = await supabase
+      .from("groups")
+      .update({ see_all: next })
+      .eq("id", id);
+    if (!error) router.refresh();
   }
 
   async function rename(id: string, current: string) {
@@ -71,6 +81,14 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
             Add
           </button>
         </div>
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input
+            type="checkbox"
+            checked={seeAll}
+            onChange={(e) => setSeeAll(e.target.checked)}
+          />
+          Members see all challenges (e.g. Serving Ones)
+        </label>
       </form>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
@@ -80,8 +98,21 @@ export default function GroupsManager({ groups }: { groups: Group[] }) {
             key={g.id}
             className="flex items-center justify-between py-2 text-sm"
           >
-            <span className="text-content">{g.name}</span>
+            <span className="text-content">
+              {g.name}
+              {g.see_all && (
+                <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-xs text-muted">
+                  sees all
+                </span>
+              )}
+            </span>
             <span className="flex gap-3">
+              <button
+                onClick={() => toggleSeeAll(g.id, !g.see_all)}
+                className="text-xs text-muted hover:text-heading"
+              >
+                {g.see_all ? "Unset see-all" : "Set see-all"}
+              </button>
               <button
                 onClick={() => rename(g.id, g.name)}
                 className="text-xs text-muted hover:text-heading"

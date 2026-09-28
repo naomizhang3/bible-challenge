@@ -202,24 +202,24 @@ export type Database = {
       }
       groups: {
         Row: {
-          admin_only: boolean
           created_at: string
           id: string
           name: string
+          see_all: boolean
           sort_order: number
         }
         Insert: {
-          admin_only?: boolean
           created_at?: string
           id?: string
           name: string
+          see_all?: boolean
           sort_order?: number
         }
         Update: {
-          admin_only?: boolean
           created_at?: string
           id?: string
           name?: string
+          see_all?: boolean
           sort_order?: number
         }
         Relationships: []
@@ -558,6 +558,7 @@ export type Database = {
       }
       can_admin_challenge: { Args: { cid: string }; Returns: boolean }
       current_group_id: { Args: never; Returns: string }
+      current_group_sees_all: { Args: never; Returns: boolean }
       delete_challenge: { Args: { cid: string }; Returns: undefined }
       is_global_admin: { Args: never; Returns: boolean }
     }
