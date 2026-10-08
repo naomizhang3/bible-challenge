@@ -39,7 +39,10 @@ export async function updateSession(request: NextRequest) {
   // Route protection: send signed-out users to /login (allow the auth pages).
   const { pathname } = request.nextUrl;
   const isPublic =
-    pathname.startsWith("/login") || pathname.startsWith("/auth");
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    // Cron endpoints authenticate via CRON_SECRET, not a user session.
+    pathname.startsWith("/api/cron");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
