@@ -22,7 +22,7 @@ const TITLES = [
   "Pursue Him and Know Him!",
   "Extend your streak!",
   "Stay in the Word today",
-  "Don't break your streak!",
+  "Look away unto Jesus!",
 ];
 
 function pickTitle(): string {
