@@ -73,6 +73,8 @@ export default function PushToggle() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in.");
+      // Upsert on user_id so one person keeps a single subscription (re-enabling
+      // on another browser/device replaces the old one instead of duplicating).
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
@@ -80,7 +82,7 @@ export default function PushToggle() {
           p256dh: json.keys!.p256dh,
           auth: json.keys!.auth,
         },
-        { onConflict: "endpoint" }
+        { onConflict: "user_id" }
       );
       if (error) throw error;
       setSubscribed(true);
