@@ -14,7 +14,27 @@ export default function LoginPage() {
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  async function sendReset() {
+    setError(null);
+    setNotice(null);
+    if (!email.trim()) {
+      setError("Enter your email above first, then tap Forgot password.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setNotice("Check your email for a link to reset your password.");
+  }
 
   async function signInWithGoogle() {
     setError(null);
@@ -32,6 +52,7 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     setLoading(true);
 
     const { error } =
@@ -128,6 +149,11 @@ export default function LoginPage() {
             />
 
             {error && <p className="text-sm text-red-600">{error}</p>}
+            {notice && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                {notice}
+              </p>
+            )}
 
             <button
               type="submit"
@@ -142,11 +168,23 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={sendReset}
+              disabled={loading}
+              className="w-full text-sm text-muted hover:text-heading disabled:opacity-50"
+            >
+              Forgot password?
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {
               setMode(mode === "signin" ? "signup" : "signin");
               setError(null);
+              setNotice(null);
             }}
             className="w-full text-sm text-muted hover:text-heading"
           >
