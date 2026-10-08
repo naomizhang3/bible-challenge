@@ -47,9 +47,40 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const admin = createAdminClient();
+
+  // Test mode (?test=1): send a clearly-marked test push to everyone currently
+  // opted in, regardless of readings, to verify delivery end-to-end.
+  if (new URL(request.url).searchParams.get("test") === "1") {
+    const { data: subs } = await admin
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth");
+    const payload = JSON.stringify({
+      title: "Test notification",
+      body: "This is a test of the daily reading reminder. If you see this, notifications are working!",
+      url: "/",
+    });
+    let sent = 0;
+    let failed = 0;
+    await Promise.all(
+      (subs ?? []).map(async (s) => {
+        const res = await sendPush(s, payload);
+        if (res.ok) sent++;
+        else {
+          failed++;
+          if (res.gone)
+            await admin
+              .from("push_subscriptions")
+              .delete()
+              .eq("endpoint", s.endpoint);
+        }
+      })
+    );
+    return NextResponse.json({ test: true, sent, failed });
+  }
+
   const tz = process.env.REMINDER_TIMEZONE || "America/New_York";
   const today = todayInTz(tz);
-  const admin = createAdminClient();
 
   // Active challenges.
   const { data: challenges } = await admin
