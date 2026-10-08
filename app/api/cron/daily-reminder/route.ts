@@ -82,19 +82,39 @@ export async function GET(request: NextRequest) {
     subsByUser.set(s.user_id, list);
   }
 
-  // Build the notification list: opted-in participants with an unread reading.
-  const jobs: { sub: PushSub; payload: string }[] = [];
+  // Collect each person's unread readings for today (across all their active
+  // challenges), so we can send ONE notification per person — not per challenge.
+  const pendingByUser = new Map<
+    string,
+    { challengeId: string; displayText: string }[]
+  >();
   for (const p of participants ?? []) {
     const reading = readingByChallenge.get(p.challenge_id);
     if (!reading) continue;
     if (completed.has(`${p.id}:${reading.id}`)) continue;
-    const userSubs = subsByUser.get(p.user_id);
+    const list = pendingByUser.get(p.user_id) ?? [];
+    list.push({ challengeId: p.challenge_id, displayText: reading.display_text });
+    pendingByUser.set(p.user_id, list);
+  }
+
+  // One notification per person (per device).
+  const jobs: { sub: PushSub; payload: string }[] = [];
+  for (const [userId, pending] of pendingByUser) {
+    const userSubs = subsByUser.get(userId);
     if (!userSubs?.length) continue;
-    const payload = JSON.stringify({
-      title: "Press on toward the goal!",
-      body: `Today's reading is: ${reading.display_text}`,
-      url: `/challenges/${p.challenge_id}`,
-    });
+    const payload = JSON.stringify(
+      pending.length === 1
+        ? {
+            title: "Press on toward the goal!",
+            body: `Today's reading is: ${pending[0].displayText}`,
+            url: `/challenges/${pending[0].challengeId}`,
+          }
+        : {
+            title: "Press on toward the goal!",
+            body: `You have today's readings waiting in ${pending.length} challenges.`,
+            url: "/",
+          }
+    );
     for (const sub of userSubs) jobs.push({ sub, payload });
   }
 
