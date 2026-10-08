@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
     const userSubs = subsByUser.get(p.user_id);
     if (!userSubs?.length) continue;
     const payload = JSON.stringify({
-      title: "Today's reading is ready",
-      body: `${reading.display_text} — tap to read and keep your streak.`,
+      title: "Press on toward the goal!",
+      body: `Today's reading is: ${reading.display_text}`,
       url: `/challenges/${p.challenge_id}`,
     });
     for (const sub of userSubs) jobs.push({ sub, payload });
