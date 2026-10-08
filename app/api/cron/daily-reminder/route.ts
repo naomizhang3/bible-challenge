@@ -9,6 +9,26 @@ import {
 
 export const runtime = "nodejs";
 
+// Reminder titles. "It's time to read!" is listed more often so it shows up the
+// majority of the time, with the others mixed in to keep it fresh.
+const TITLES = [
+  "It's time to read!",
+  "It's time to read!",
+  "It's time to read!",
+  "It's time to read!",
+  "It's time to read!",
+  "It's time to read!",
+  "Press on toward the goal!",
+  "Pursue Him and Know Him!",
+  "Extend your streak!",
+  "Stay in the Word today",
+  "Don't break your streak!",
+];
+
+function pickTitle(): string {
+  return TITLES[Math.floor(Math.random() * TITLES.length)];
+}
+
 export async function GET(request: NextRequest) {
   // Vercel attaches `Authorization: Bearer <CRON_SECRET>` to cron invocations.
   const secret = process.env.CRON_SECRET;
@@ -102,15 +122,16 @@ export async function GET(request: NextRequest) {
   for (const [userId, pending] of pendingByUser) {
     const userSubs = subsByUser.get(userId);
     if (!userSubs?.length) continue;
+    const title = pickTitle();
     const payload = JSON.stringify(
       pending.length === 1
         ? {
-            title: "Press on toward the goal!",
+            title,
             body: `Today's reading is: ${pending[0].displayText}`,
             url: `/challenges/${pending[0].challengeId}`,
           }
         : {
-            title: "Press on toward the goal!",
+            title,
             body: `You have today's readings waiting in ${pending.length} challenges.`,
             url: "/",
           }
