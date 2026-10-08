@@ -1,23 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import webpush from "web-push";
 import { createClient } from "../../../../src/lib/supabase/server";
+import { ensurePushConfigured, sendPush } from "../../../../src/lib/push-server";
 
 // web-push needs the Node runtime (not Edge).
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const subject = process.env.VAPID_SUBJECT;
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
-  if (!subject || !publicKey || !privateKey) {
+  if (!ensurePushConfigured()) {
     return NextResponse.json(
       { error: "Push is not configured on the server." },
       { status: 500 }
     );
   }
-  // Configure web-push per request (not at module load, which would run during
-  // the build before env vars are available).
-  webpush.setVapidDetails(subject, publicKey, privateKey);
 
   const supabase = await createClient();
   const {
@@ -54,20 +48,11 @@ export async function POST(request: NextRequest) {
   let failed = 0;
   await Promise.all(
     (subs ?? []).map(async (s) => {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: s.endpoint,
-            keys: { p256dh: s.p256dh, auth: s.auth },
-          },
-          payload
-        );
-        sent++;
-      } catch (e: unknown) {
+      const res = await sendPush(s, payload);
+      if (res.ok) sent++;
+      else {
         failed++;
-        // 404/410 means the subscription is dead — prune it.
-        const status = (e as { statusCode?: number })?.statusCode;
-        if (status === 404 || status === 410) {
+        if (res.gone) {
           await supabase.rpc("delete_push_subscription", {
             p_endpoint: s.endpoint,
           });
