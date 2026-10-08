@@ -5,13 +5,20 @@ import { createClient } from "../../../../src/lib/supabase/server";
 // web-push needs the Node runtime (not Edge).
 export const runtime = "nodejs";
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function POST(request: NextRequest) {
+  const subject = process.env.VAPID_SUBJECT;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!subject || !publicKey || !privateKey) {
+    return NextResponse.json(
+      { error: "Push is not configured on the server." },
+      { status: 500 }
+    );
+  }
+  // Configure web-push per request (not at module load, which would run during
+  // the build before env vars are available).
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+
   const supabase = await createClient();
   const {
     data: { user },
