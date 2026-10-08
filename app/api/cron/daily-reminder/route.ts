@@ -19,7 +19,7 @@ const TITLES = [
   "It's time to read!",
   "It's time to read!",
   "Press on toward the goal!",
-  "Pursue Him and Know Him!",
+  "Pursue Him and know Him!",
   "Extend your streak!",
   "Stay in the Word today",
   "Look away unto Jesus!",
