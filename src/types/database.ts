@@ -262,6 +262,41 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reading_progress: {
         Row: {
           completed_at: string
@@ -560,7 +595,12 @@ export type Database = {
       current_group_id: { Args: never; Returns: string }
       current_group_sees_all: { Args: never; Returns: boolean }
       delete_challenge: { Args: { cid: string }; Returns: undefined }
+      delete_push_subscription: { Args: { p_endpoint: string }; Returns: undefined }
       is_global_admin: { Args: never; Returns: boolean }
+      push_subscriptions_for_challenge: {
+        Args: { cid: string }
+        Returns: { auth: string; endpoint: string; p256dh: string }[]
+      }
     }
     Enums: {
       challenge_status: "draft" | "active" | "completed" | "archived"

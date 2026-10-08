@@ -1,6 +1,7 @@
 import { createClient } from "../../src/lib/supabase/server";
 import AppHeader from "../app-header";
 import ProfileForm from "./profile-form";
+import PushToggle from "./push-toggle";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -52,6 +53,13 @@ export default async function ProfilePage() {
             initialGroupId={profile?.group_id ?? ""}
             groups={groups ?? []}
           />
+        </div>
+
+        <div className="rounded-2xl border border-hair bg-surface p-5 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold text-muted">
+            Notifications
+          </h2>
+          <PushToggle />
         </div>
       </main>
     </div>

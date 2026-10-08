@@ -8,6 +8,7 @@ import PlanEditor from "./plan-editor";
 import TeamsManager from "./teams-manager";
 import MembersManager from "./members-manager";
 import ReadingAdjuster from "./reading-adjuster";
+import PushBroadcast from "./push-broadcast";
 
 export default async function AdminChallengePage({
   params,
@@ -134,6 +135,10 @@ export default async function AdminChallengePage({
 
         <Section title="Log a reading">
           <ReadingAdjuster members={members} readings={readings ?? []} />
+        </Section>
+
+        <Section title="Send a notification">
+          <PushBroadcast challengeId={id} />
         </Section>
 
         <Section title="Admin activity">
